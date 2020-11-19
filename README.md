@@ -12,4 +12,19 @@ selected (assigned more weight) if index price drops and vise versa.
 * amazon review dataset reference: http://deepyeti.ucsd.edu/jianmo/amazon/index.html
 * S&P 500 Historical Price reference: https://finance.yahoo.com/quote/%5EGSPC/history?period1=1514592000&period2=1546300800&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true
 
+## Setting:
+
+# Installation #
+
+### Requirements
+
+  * Python 3.3+
+  * macOS or Windows
+
+### Installing module for the project
+
+  * Install the fundamental module: run command ```pip3 install requirements.txt ```
+  * If you have error: "Could not find a version that satisfies the requirement",
+    please try the command: ```pip3 install -r requirements.txt```
+
 ## How to Run the System:
