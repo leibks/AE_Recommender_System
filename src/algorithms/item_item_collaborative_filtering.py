@@ -3,7 +3,6 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 from src.algorithms.utils import (
-    TOP_K_USERS,
     TOP_K_PRODUCTS,
     USER_DICT,
     fetch_users_products
