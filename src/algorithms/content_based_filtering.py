@@ -29,7 +29,7 @@ for i in range(len(product_reviews["reviewText"])):
 vectorizer = TfidfVectorizer(stop_words='english')
 X1 = vectorizer.fit_transform(product_reviews["reviewText"])
 # print(len(vectorizer.get_feature_names()))
-# print(X1.shape)
+print(X1.toarray())
 
 # Compute the cosine similarity matrix
 cosine_sim = cosine_similarity(X1, X1)
@@ -42,15 +42,12 @@ print(indices)
 def get_recommendations(asin, cosine_sim=cosine_sim, product_reviews=product_reviews, threshold=0.1):
     # Get the index of the product that matches the title
     idx = indices[asin]
-    print("idx", idx)
 
     # Get the pairwsie similarity scores of all products with that product
     sim_scores = list(enumerate(cosine_sim[idx]))
-    print("sim_scores", sim_scores)
 
     # Sort the products based on the similarity scores
     sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-    print("sim_scores", sim_scores)
 
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
@@ -60,12 +57,11 @@ def get_recommendations(asin, cosine_sim=cosine_sim, product_reviews=product_rev
 
     # Get the product indices
     product_indices = [i[0] for i in res_scores]
-    print(product_indices)
 
     # Return the top 10 most similar products
     res = product_reviews['asin'].iloc[product_indices]
     ## TODO: combine with scores
-    return product_reviews['asin'].iloc[product_indices], res_scores
+    return product_reviews['asin'].iloc[product_indices]
 
 ## UNCOMMENT for the review-based method
 print("Reviews based Recommender:", get_recommendations("073530498X", threshold=0.06))
