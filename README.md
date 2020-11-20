@@ -23,14 +23,14 @@ selected (assigned more weight) if index price drops and vise versa.
 
 ### Installing module for the project
 
-  * Install the fundamental module: run command ```pip3 install requirements.txt ```
+  * Install the fundamental module: run command `pip3 install requirements.txt`
   * If you have error: "Could not find a version that satisfies the requirement",
-    please try the command: ```pip3 install -r requirements.txt```
+    please try the command: `pip3 install -r requirements.txt`
 
 ## How to Run the System:
 
 
 ## Test Sample
-  * under the AE_Recommender_System:
-        run command ```python src/algorithms/user_user_collaborative_filtering.py``` to test user collaborative algo
-        run command ```python src/algorithms/item_item_collaborative_filtering.py``` to test item collaborative algo
+  under the AE_Recommender_System:
+  * run command `python src/algorithms/user_user_collaborative_filtering.py` to test user collaborative algo
+  * run command `python src/algorithms/item_item_collaborative_filtering.py` to test item collaborative algo
