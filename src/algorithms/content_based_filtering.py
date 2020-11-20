@@ -1,14 +1,8 @@
 
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.neighbors import NearestNeighbors
-from sklearn.cluster import KMeans
-from sklearn.metrics import adjusted_rand_score
-import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
-from nltk.stem import PorterStemmer
-from sklearn.metrics.pairwise import linear_kernel
 
 raw_reviews = pd.read_csv('resource\sample_data\sample_electronics.csv')
 
@@ -38,7 +32,7 @@ X1 = vectorizer.fit_transform(product_reviews["reviewText"])
 # print(X1.shape)
 
 # Compute the cosine similarity matrix
-cosine_sim = linear_kernel(X1, X1)
+cosine_sim = cosine_similarity(X1, X1)
 
 # #Construct a reverse map of indices and product asins
 indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
@@ -74,8 +68,8 @@ def get_recommendations(asin, cosine_sim=cosine_sim, product_reviews=product_rev
     return product_reviews['asin'].iloc[product_indices], res_scores
 
 ## UNCOMMENT for the review-based method
-# print("Reviews based Recommender:", get_recommendations("073530498X", threshold=0.06))
-# exit()
+print("Reviews based Recommender:", get_recommendations("073530498X", threshold=0.06))
+exit()
 
 ## Product Features Based Recommender
 product_features = raw_reviews[["asin", "price", "main_cat"]]
