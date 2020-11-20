@@ -73,8 +73,8 @@ def get_recommendations(asin, cosine_sim=cosine_sim, product_reviews=product_rev
     ## TODO: combine with scores
     return product_reviews['asin'].iloc[product_indices], res_scores
 
-## UNCOMMENT
-# print("Reviews based Recommender:", get_recommendations("073530498X"))
+## UNCOMMENT for the review-based method
+# print("Reviews based Recommender:", get_recommendations("073530498X", threshold=0.06))
 # exit()
 
 ## Product Features Based Recommender
@@ -89,8 +89,7 @@ def create_soup(x):
 product_features['soup'] = product_features.apply(create_soup, axis=1)
 # print(product_features["soup"])
 
-count = CountVectorizer(stop_words='english')
-count_matrix = count.fit_transform(product_features['soup'])
+count_matrix = vectorizer.fit_transform(product_features['soup'])
 
 # compute cosine similarity
 cosine_sim2 = cosine_similarity(count_matrix, count_matrix)
