@@ -49,7 +49,7 @@ def build_user_profiles(features):
     user_matrix = pd.DataFrame(user_matrix)
     # user_matrix.index = raw_reviews["reviewerID"]
     user_matrix['reviewerID']=raw_reviews["reviewerID"]
-    print(user_matrix)
+    # print(user_matrix)
 
     user_profile = user_matrix.groupby("reviewerID").mean()
     return user_profile
