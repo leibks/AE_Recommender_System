@@ -28,7 +28,11 @@ selected (assigned more weight) if index price drops and vise versa.
     please try the command: `pip3 install -r requirements.txt`
 
 ## How to Run the System:
-
+### Data downloading and processing
+```shell script
+python3 data_man.py {working directory}
+```
+Without working directory input parameter, the script will download all raw data files to current working dierectory.
 
 ## Test Sample
   under the AE_Recommender_System:

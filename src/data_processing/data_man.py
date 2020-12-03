@@ -29,12 +29,18 @@ for url in data_source:
     file_name = url.split('/')[-1]
     file_names.append(file_name)
     full_dir = directory + file_name
-    print("Downloading to file ", full_dir)
-    wget.download(url, out=full_dir)
+    if os.path.exists(full_dir):
+        print("File already exists, skip downloading for ", file_name)
+    else:
+        print("Downloading to file ", full_dir)
+        wget.download(url, out=full_dir)
 
-r = requests.get(sp500_url, allow_redirects=True)
 sp500_name = directory + 'sp500.csv'
-open('sp500_name', 'wb').write(r.content)
+if os.path.exists(sp500_name):
+    print("File already exists, skip downloading for ", sp500_name)
+else:
+    r = requests.get(sp500_url, allow_redirects=True)
+    open('sp500_name', 'wb').write(r.content)
 
 print("Finished downloading data...")
 
