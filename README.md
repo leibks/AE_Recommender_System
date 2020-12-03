@@ -34,3 +34,4 @@ selected (assigned more weight) if index price drops and vise versa.
   under the AE_Recommender_System:
   * run command `python src/algorithms/user_user_collaborative_filtering.py` to test user collaborative algo
   * run command `python src/algorithms/item_item_collaborative_filtering.py` to test item collaborative algo
+  * run command `python src/algorithms/content_based_filtering.py --test reviewerID` to test content based algo
