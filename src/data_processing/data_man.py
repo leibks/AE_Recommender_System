@@ -78,13 +78,15 @@ def process_data(names, directory):
             print('data size ', len(data_df))
             meta_df = pd.read_json('{}meta_{}.json'.format(directory, name), lines=True)
             if 'main_cat' not in meta_df.columns:
-                meta_df = meta_df[['title', 'also_buy', 'rank', 'price', 'asin']]
+                meta_df = meta_df[['title', 'price', 'asin']]
                 meta_df['main_cat'] = name
             else:
-                meta_df = meta_df[['title', 'also_buy', 'rank', 'main_cat', 'price', 'asin']]
+                meta_df = meta_df[['title', 'main_cat', 'price', 'asin']]
             print('metadata size ', len(meta_df))
             df = pd.merge(data_df, meta_df, how='left', on='asin')
             df = df.loc[df.astype(str).drop_duplicates().index]  # remove duplicates
+            df = df[(df['price'].str.len() < 20) & (df['price'].str.len() > 0)]
+            df = df.dropna(subset=['price'])
             df.to_csv(expected_name)
 
 
