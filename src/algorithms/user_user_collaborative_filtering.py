@@ -24,7 +24,7 @@ def build_user_matrix(users, products):
 
 # utility (value) consider the rate from 0 to 5 and economic factor
 # , each row represent a user, and each column represent a product
-def build_user_utility_matrix(utility_matrix, df):
+def build_user_utility_matrix(utility_matrix, df, consider_economic=False):
     for index in df.index:
         name = df["reviewerName"][index]
         product_id = df["asin"][index]
@@ -32,7 +32,10 @@ def build_user_utility_matrix(utility_matrix, df):
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
-        economic_factor = 0
+        if consider_economic:
+            economic_factor = 0
+        else:
+            economic_factor = 0
         utility_matrix[name][PRODUCT_DICT[product_id]] = rate + economic_factor
 
 

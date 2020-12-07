@@ -10,12 +10,12 @@ test_user = str(sys.argv[1])
 
 raw_reviews = pd.read_csv('resource\sample_data\sample_electronics.csv')
 
-## Data processing >>
-## combine same data into one column
-## stem data e.g. (videos -> video)
-## clean data; convert all data to lower case and strip names of spaces
+# Data processing >>
+# combine same data into one column
+# stem data e.g. (videos -> video)
+# clean data; convert all data to lower case and strip names of spaces
 
-## combine same product into one item reviews record
+# combine same product into one item reviews record
 product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
 # compute the average scores that users give products they bought
 temp = raw_reviews.groupby("reviewerID", as_index=False).agg(np.array)
@@ -24,7 +24,7 @@ user_avgscore = {}
 for i in range(len(temp)):
     user_avgscore[temp["reviewerID"][i]] = temp["overall"][i].mean()
 
-## stem data e.g. (videos -> video)
+# stem data e.g. (videos -> video)
 sno = nltk.stem.SnowballStemmer('english')
 
 for i in range(len(product_reviews["reviewText"])):
@@ -80,7 +80,7 @@ def get_recommendations(reviewerID, cosine_sim, product_reviews=product_reviews,
 # Construct a reverse map of product_indices and product asins
 product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
 
-## Product Reviews based Recommender:
+# Product Reviews based Recommender:
 vectorizer = TfidfVectorizer(stop_words='english')
 X1 = vectorizer.fit_transform(product_reviews["reviewText"])
 review_text = X1.toarray()
@@ -96,19 +96,24 @@ cosine_sim.columns = product_reviews["asin"]
 cosine_sim.index = raw_reviews["reviewerID"]
 # print(cosine_sim)
 
-## UNCOMMENT for the review-based method
+
+# UNCOMMENT for the review-based method
 # print("Reviews based Recommender:", get_recommendations(test_user, cosine_sim, threshold=0.1))
 # exit()
 
-## Product Features Based Recommender
+
+# Product Features Based Recommender
 product_features = raw_reviews[["asin", "price", "main_cat"]]
 # print(product_features)
 product_features = product_features.drop_duplicates(["asin"])
 # print("drop_duplicates", product_features)
 
-## Build a feature soup and using IT-IDF to get matrix
+
+# Build a feature soup and using IT-IDF to get matrix
 def create_soup(x):
     return x['main_cat'] + ' ' + str(x['price'])
+
+
 product_features['soup'] = product_features.apply(create_soup, axis=1)
 # print(product_features["soup"])
 
@@ -126,7 +131,7 @@ cosine_sim2.columns = product_reviews["asin"]
 cosine_sim2.index = raw_reviews["reviewerID"]
 
 # TODO
-## Cluster values in each feature to build matrix
+# Cluster values in each feature to build matrix
 # count_matrix = product_reviews[["price", "main_cat"]]
 # # print(count_matrix)
 # cosine_sim2 = cosine_similarity(count_matrix, count_matrix)
