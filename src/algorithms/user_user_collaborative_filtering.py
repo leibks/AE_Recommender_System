@@ -3,11 +3,22 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 from src.algorithms.utils import (
-    TOP_K_USERS,
-    TOP_K_PRODUCTS,
     PRODUCT_DICT,
-    fetch_users_products
+    get_economic_factor,
+    fetch_users_products,
+    identify_price_in_items
 )
+
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
+parser.add_argument("--TOP_ITEM", type=int, default=10, help="how many items provided for recommendation")
+parser.add_argument("--HIGH_VALUE", type=float, default=0.9, help="identify high value products")
+parser.add_argument("--LOW_VALUE", type=float, default=0.1, help="identify low value products")
+parser.add_argument("--ECO", type=bool, default=True, help="consider economic factors")
+
+args = parser.parse_args()
 
 
 # key: user_name, value: a list of values
@@ -29,11 +40,18 @@ def build_user_utility_matrix(utility_matrix, df, consider_economic=False):
         name = df["reviewerName"][index]
         product_id = df["asin"][index]
         rate = df["overall"][index]
+        stock_rate = df["stockReturn"][index]
+        price = df["price"][index]
+        if not isinstance(price, float):
+            if price[:1] != '$':
+                price = 0
+            else:
+                price = float(price[1:])
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
         if consider_economic:
-            economic_factor = 0
+            economic_factor = get_economic_factor(stock_rate, price, rate)
         else:
             economic_factor = 0
         utility_matrix[name][PRODUCT_DICT[product_id]] = rate + economic_factor
@@ -58,13 +76,14 @@ def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids)
 
 
 def set_up_user_matrix():
-    df = pd.read_csv('resource/sample_data/sample_electronics.csv')
+    df = pd.read_csv('resource/sample_data/joined_sample_electronics.csv')
     users_products = fetch_users_products(df)
+    identify_price_in_items(df["price"].tolist(), args.HIGH_VALUE, args.LOW_VALUE)
     users = users_products[0]
     product_ids = users_products[1]
     utility_matrix = build_user_matrix(users, product_ids)
     similarity_matrix = build_user_matrix(users, product_ids)
-    build_user_utility_matrix(utility_matrix, df)
+    build_user_utility_matrix(utility_matrix, df, args.ECO)
     build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids)
     return [utility_matrix, similarity_matrix]
 
@@ -81,7 +100,7 @@ def find_similar_users(user_name, similarity_matrix):
 
     similar_res = sorted(similar_users.items(), key=lambda item: item[1], reverse=True)
 
-    return similar_res[:TOP_K_USERS] if len(similar_res) > TOP_K_USERS else similar_res
+    return similar_res
 
 
 def predict_single_product_utility(utility_matrix, similar_res, product_id):
@@ -119,7 +138,7 @@ def find_top_k_recommended_products(user_name, utility_matrix, similarity_matrix
     for i in sort_products:
         print(i)
         recommended_product.append(i[0])
-        if len(recommended_product) > TOP_K_PRODUCTS:
+        if len(recommended_product) > args.TOP_ITEM:
             break
 
     return recommended_product
@@ -133,7 +152,7 @@ def user_collaborative_filter():
     # store the similarity matrix into the file as the model for saving training time
 
     # find k recommended products
-    recommended_products = find_top_k_recommended_products("ESK", utility_matrix, similarity_matrix)
+    recommended_products = find_top_k_recommended_products(args.USER, utility_matrix, similarity_matrix)
     print(recommended_products)
 
 
