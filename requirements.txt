@@ -1,4 +1,6 @@
-numpy == 1.19.1
-scikit-learn == 0.20
-pandas == 1.1.4
-
+numpy==1.19.1
+scikit-learn==0.20
+pandas==1.1.4
+nltk==3.5
+wget==3.2
+requests==2.25.0
