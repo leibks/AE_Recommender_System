@@ -36,6 +36,7 @@ Without working directory input parameter, the script will download all raw data
   under the AE_Recommender_System:
   * run command `python src/algorithms/user_user_collaborative_filtering.py` to test user collaborative algo
   * run command `python src/algorithms/item_item_collaborative_filtering.py` to test item collaborative algo
+<<<<<<< HEAD
   * required arguments (above two):
         --USER USER                 (the user who is recommended, eg: Tazman32)
    * optional arguments (above two):
@@ -45,3 +46,14 @@ Without working directory input parameter, the script will download all raw data
         --LOW_VALUE LOW_VALUE       (identify low value products)
         --ECO ECO                   (consider economic factors)
   * run command `python src/algorithms/content_based_filtering.py --test reviewerID` to test content based algo
+=======
+    required arguments (above two):
+        --USER USER                 the user who is recommended, eg: Tazman32
+    optional arguments (above two):
+        -h, --help                  show this help message and exit
+        --TOP_ITEM TOP_ITEM         how many items provided for recommendation
+        --HIGH_VALUE HIGH_VALUE     identify high value products
+        --LOW_VALUE LOW_VALUE       identify low value products
+        --ECO ECO                   consider economic factors
+  * run command `python src/algorithms/content_based_filtering.py test_reviewerID` to test content based algo
+>>>>>>> 939c9ccc13b2540b9dbc1d037ddf75c60e2dc798
