@@ -44,4 +44,4 @@ Without working directory input parameter, the script will download all raw data
         --HIGH_VALUE HIGH_VALUE     identify high value products
         --LOW_VALUE LOW_VALUE       identify low value products
         --ECO ECO                   consider economic factors
-  * run command `python src/algorithms/content_based_filtering.py --test reviewerID` to test content based algo
+  * run command `python src/algorithms/content_based_filtering.py test_reviewerID` to test content based algo
