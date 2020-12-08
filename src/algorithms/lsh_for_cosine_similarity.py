@@ -3,13 +3,12 @@ from sklearn import random_projection
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# Generate the hashtable for easier finding similar items.
-# Same hash value means a list of items under this
-# hash value are most similar
-# random_type="gau" means using gaussian random projection
-# random_type="sparse" means using sparse random projection
+# The hash table class that contains the hash values for similar items.
+# Same hash value means a list of items under this hash value are most similar
 class HashTable:
 
+    # random_type="gau" means using gaussian random projection
+    # random_type="sparse" means using sparse random projection
     def __init__(self, input_dim, random_type="gau", hash_size=3):
         self.input_dim = input_dim
         # key: hash value, value: a list of item names
@@ -48,11 +47,11 @@ class HashTable:
         return self.hash_table[self.hash_values[item_name]]
 
 
-# Build a number of hash tables to adjust the trade-offer between recall and precision.
-# It is worth that multiple tables generalize the high
-# dimensional space better and amortize the contribution of bad random vectors.
-# So, by building multiple hash tables and providing one item
-# we collect all similar items from all hash tables
+# The locality sensitive hashing class that optimize the calculation of the cosine similarity.
+# It builds a number of hash tables to adjust the trade-offer between recall and precision.
+# It is worth that multiple tables generalize the high dimensional space better and
+# amortize the contribution of bad random vectors. So, by building multiple hash tables
+# and providing one item we collect all similar items from all hash tables
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
