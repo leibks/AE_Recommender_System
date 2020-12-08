@@ -8,7 +8,7 @@ from src.algorithms.utils import (
     identify_price_in_items,
     get_economic_factor
 )
-from src.algorithms.locality_sensitive_hashing import *
+from src.algorithms.lsh_for_cosine_similarity import *
 
 import argparse
 
@@ -148,7 +148,8 @@ def find_recommended_products(user_name, utility_matrix, similarity_matrix):
 
 # ==================================== LSH method to find similar items ====================================
 def find_recommended_products_by_lsh(user_name, utility_matrix, similarity_matrix):
-    idx = USER_DICT[user_name] # index of this user in every product's user list
+    # index of this user in every product's user list
+    idx = USER_DICT[user_name]
     all_product_utilities = {}
     lsh_algo = LSH(similarity_matrix, len(USER_DICT))
     for product_id in utility_matrix:

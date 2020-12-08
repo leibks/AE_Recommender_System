@@ -4,7 +4,8 @@ import re
 import time
 from datasketch import MinHash, MinHashLSHForest
 
-#Preprocess will split a string of text into individual tokens/shingles based on whitespace.
+
+# Preprocess will split a string of text into individual tokens/shingles based on whitespace.
 def preprocess(text):
     text = re.sub(r'[^\w\s]','',text)
     tokens = text.lower()
@@ -14,8 +15,10 @@ def preprocess(text):
 # text = 'The devil went down to Georgia'
 # print('The shingles (tokens) are:', preprocess(text))
 
-#Number of Permutations
+
+# Number of Permutations
 permutations = 128
+
 
 def get_forest(data, perms):
     start_time = time.time()
@@ -31,14 +34,15 @@ def get_forest(data, perms):
         
     forest = MinHashLSHForest(num_perm=perms)
     
-    for i,m in enumerate(minhash):
-        forest.add(i,m)
+    for i, m in enumerate(minhash):
+        forest.add(i, m)
         
     forest.index()
     
     print('It took %s seconds to build forest.' %(time.time()-start_time))
     
     return forest
+
 
 def predict(text, database, perms, num_results, forest):
     start_time = time.time()
@@ -58,9 +62,11 @@ def predict(text, database, perms, num_results, forest):
     
     return result
 
+
 raw_reviews = pd.read_csv('resource\sample_data\sample_electronics.csv')
 product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
 forest = get_forest(product_reviews, permutations)
+
 
 num_recommendations = 5
 asin = 'This is not a plug and play external dvd/cd drive.  One must download software to make it work which I cannot figure out'
