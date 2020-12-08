@@ -74,6 +74,8 @@ def identify_price_in_items(prices, high_rate, low_rate):
     HIGH_PRICE = unique_prices[high_threshold]
     LOW_PRICE = unique_prices[low_threshold]
 
+    return [HIGH_PRICE, LOW_PRICE]
+
 
 def get_economic_factor(stock_rate, price, rate):
     if price == 0:

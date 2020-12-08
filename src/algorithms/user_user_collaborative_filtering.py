@@ -22,7 +22,7 @@ args = parser.parse_args()
 
 
 # key: user_name, value: a list of values
-# (index in the list points to the product id by PRODUCT_DICT)
+# (index in the list points to the related product id by using PRODUCT_DICT)
 def build_user_matrix(users, products):
     matrix = {}
     for user in users:
@@ -58,7 +58,7 @@ def build_user_utility_matrix(utility_matrix, df, consider_economic=False):
 
 
 # value is the (rate to the product for the user - average rate for the user),
-# each row represent a user, and each column represent a product
+# each row represent a user's a list of products
 def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids):
     for name in similarity_matrix.keys():
         products = utility_matrix[name]

@@ -8,6 +8,7 @@ from src.algorithms.utils import (
     identify_price_in_items,
     get_economic_factor
 )
+from src.algorithms.locality_sensitive_hashing import *
 
 import argparse
 
@@ -22,7 +23,7 @@ args = parser.parse_args()
 
 
 # key: product_id, value: a list of users
-# (index in the list points to the user name by PRODUCT_DICT)
+# (index in the list points to the related user name by using USER_DICT)
 def build_item_matrix(users, products):
     matrix = {}
     for product in products:
@@ -58,7 +59,7 @@ def build_item_utility_matrix(utility_matrix, df, consider_economic=False):
 
 
 # value is the (rate to the product given by one user - average rate for this product),
-# each row represent a user, and each column represent a product
+# each row represent a product's a list of users
 def build_item_similarity_matrix(similarity_matrix, utility_matrix, user_names):
     for product_id in similarity_matrix.keys():
         users = utility_matrix[product_id]
@@ -88,6 +89,7 @@ def set_up_item_matrix():
     return [utility_matrix, similarity_matrix]
 
 
+# ==================================== Normal method to find similar items ====================================
 def find_similar_items(product_id, similarity_matrix):
     similar_products = {}
     given_product_vec = np.array([similarity_matrix[product_id]])
@@ -120,7 +122,7 @@ def predict_single_product_utility(utility_matrix, similar_products, user_name):
     return sum_weights / sum_similarity
 
 
-def find_top_k_recommended_products(user_name, utility_matrix, similarity_matrix):
+def find_recommended_products(user_name, utility_matrix, similarity_matrix):
     idx = USER_DICT[user_name]
     all_product_utilities = {}
     for product_id in similarity_matrix.keys():
@@ -128,6 +130,46 @@ def find_top_k_recommended_products(user_name, utility_matrix, similarity_matrix
             similar_products = find_similar_items(product_id, similarity_matrix)
             utility_matrix[product_id][idx] = \
                 predict_single_product_utility(utility_matrix, similar_products, user_name)
+
+        all_product_utilities[product_id] = utility_matrix[product_id][idx]
+
+    sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
+    recommended_product = []
+    for i in sort_products:
+        print(i)
+        recommended_product.append(i[0])
+        if len(recommended_product) > args.TOP_ITEM:
+            break
+
+    return recommended_product
+
+# ==================================== Normal method to find similar items ====================================
+
+
+# ==================================== LSH method to find similar items ====================================
+def find_recommended_products_by_lsh(user_name, utility_matrix, similarity_matrix):
+    idx = USER_DICT[user_name] # index of this user in every product's user list
+    all_product_utilities = {}
+    lsh_algo = LSH(similarity_matrix, len(USER_DICT))
+    for product_id in utility_matrix:
+        if utility_matrix[product_id][idx] == 0:
+            similarity_dic = lsh_algo.build_similar_dict(product_id)
+            # print(similarity_dic)
+            # ∑_(𝒋∈𝑵(𝒊;𝒙))〖𝒔_𝒊𝒋⋅𝒓_𝒋𝒙 〗, i is the predicted product,
+            # x is the predicted user, j is similar product
+            sum_weights = 0
+            # ∑𝒔_𝒊𝒋  (s_ij --> similarity of all similar products with the selected product)
+            sum_similarity = 0
+            for sim_item in similarity_dic.keys():
+                sim_val = similarity_dic[sim_item]
+                utility = utility_matrix[sim_item][idx]
+                sum_weights += sim_val * utility
+                sum_similarity += sim_val
+
+            if sum_similarity == 0:
+                utility_matrix[product_id][idx] = 0
+            else:
+                utility_matrix[product_id][idx] = sum_weights / sum_similarity
 
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
 
@@ -150,7 +192,7 @@ def item_collaborative_filter():
     # store the similarity matrix into the file as the model for saving training time
 
     # find k recommended products
-    recommended_products = find_top_k_recommended_products(args.USER, utility_matrix, similarity_matrix)
+    recommended_products = find_recommended_products_by_lsh(args.USER, utility_matrix, similarity_matrix)
     print(recommended_products)
 
 
