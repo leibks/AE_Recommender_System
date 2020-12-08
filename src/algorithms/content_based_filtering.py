@@ -95,8 +95,8 @@ def comb_stock():
     for idx in raw_reviews.index:
         cat = raw_reviews["main_cat"][idx]
         if not np.isnan(raw_reviews["new_price"][idx]):
-            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - float(raw_reviews["new_price"][idx]))
-        raw_reviews["overall"][idx] = new_rate
+            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 100
+        raw_reviews["overall"][idx] += new_rate
 
 
 # Function that builds user profiles
@@ -106,13 +106,15 @@ def build_user_profiles(features):
         user = raw_reviews["reviewerID"][idx]
         asin = raw_reviews["asin"][idx]
         product_idx = product_indices[asin]
-        score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0 # +0.5 is becuase many users give 5.0 score, which will make the score weight becomes 0
+        score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0 
+        # +0.5 is becuase many users give 5.0 score, which will make the score weight becomes 0
         user_matrix.append(features[product_indices[asin]] * score_weight)
 
     # print(len(user_matrix[1]), len(user_matrix))
     user_matrix = pd.DataFrame(user_matrix)
     # user_matrix.index = raw_reviews["reviewerID"]
-    user_matrix['reviewerID'] = raw_reviews["reviewerID"] # size of user_matrix = user number * number of review words
+    user_matrix['reviewerID'] = raw_reviews["reviewerID"] 
+    # size of user_matrix = user number * number of review words
     # print("user_matrix:", user_matrix)
 
     user_profile = user_matrix.groupby("reviewerID").mean()
@@ -146,6 +148,7 @@ product_indices = pd.Series(product_reviews.index, index=product_reviews['asin']
 
 # Product Reviews based Recommender:
 comb_stock()
+
 vectorizer = TfidfVectorizer(stop_words='english')
 X1 = vectorizer.fit_transform(product_reviews["reviewText"])
 review_text = X1.toarray()
@@ -154,6 +157,10 @@ review_text = X1.toarray()
 
 user_profiles = build_user_profiles(review_text) # user number * number of review words
 # print("build_user_profiles", user_profiles)
+
+# use LSH to compute the similarity, which can 
+# reduce complexity and accelerate computing
+# forest = get_forest(user_profiles, permutations)
 
 # Compute the cosine similarity matrix
 cosine_sim = cosine_similarity(user_profiles, X1)
