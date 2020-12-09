@@ -4,54 +4,19 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
-import sys
-import re
-import time
-from datasketch import MinHash, MinHashLSHForest
+from src.algorithms.lsh_for_cosine_similarity import *
+import argparse
 
+parser = argparse.ArgumentParser()
+parser.add_argument("--USER", type=str, default=None, help="the user who is recommended")
+parser.add_argument("--TOP_ITEM", type=int, default=10, help="how many items provided for recommendation")
+parser.add_argument("--HIGH_RATE", type=float, default=0.9, help="identify rate of determining high value products")
+parser.add_argument("--LOW_RATE", type=float, default=0.1, help="iidentify rate of determining low value products")
+parser.add_argument("--ECO", type=str, default="True", help="consider economic factors")
+parser.add_argument("--LSH", type=str, default="True", help="whether use the locality sensitive hashing")
 
-test_user = str(sys.argv[1])
+args = parser.parse_args()
 
-raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
-
-#Number of Permutations
-permutations = 128
-
-#Preprocess will split a string of text into individual tokens/shingles based on whitespace.
-def preprocess(text):
-    text = re.sub(r'[^\w\s]','',text)
-    tokens = text.lower()
-    tokens = tokens.split()
-    return tokens
-
-def get_forest(data, perms):
-    start_time = time.time()
-    
-    minhash = []
-    
-    for text in data['reviewText']:
-        tokens = preprocess(text)
-        m = MinHash(num_perm=perms)
-        for s in tokens:
-            m.update(s.encode('utf8'))
-        minhash.append(m)
-        
-    forest = MinHashLSHForest(num_perm=perms)
-    
-    for i,m in enumerate(minhash):
-        forest.add(i,m)
-        
-    forest.index()
-    
-    print('It took %s seconds to build forest.' %(time.time()-start_time))
-    
-    return forest
-
-
-## Data processing >>
-## combine same data into one column
-## stem data e.g. (videos -> video)
-## clean data; convert all data to lower case and strip names of spaces
 
 def process_price(row):
     out = {}
@@ -63,51 +28,59 @@ def process_price(row):
             price = np.NaN
     out["new_price"] = price
     return pd.Series(out)
-raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
 
-# combine same product into one item reviews record
-product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
-# compute the average scores that users give products they bought
-temp = raw_reviews.groupby("reviewerID", as_index=False).agg(np.array)
-# print(type(temp), temp)
-price_temp = raw_reviews.groupby("main_cat", as_index=False).mean()
-# print(type(price_temp), price_temp)
-user_avgscore = {}
-for i in range(len(temp)):
-    user_avgscore[temp["reviewerID"][i]] = temp["overall"][i].mean()
-cat_avgprice = {}
-for i in range(len(price_temp)):
-    cat_avgprice[price_temp["main_cat"][i]] = price_temp["new_price"][i]
 
-# stem data e.g. (videos -> video)
-sno = nltk.stem.SnowballStemmer('english')
+## combine same data into one column
+## stem data e.g. (videos -> video)
+## clean data; convert all data to lower case and strip names of spaces
+def process_review_text(product_reviews):
+    # stem data e.g. (videos -> video)
+    sno = nltk.stem.SnowballStemmer('english')
 
-for i in range(len(product_reviews["reviewText"])):
-    sen = []
-    words = product_reviews["reviewText"][i].split()
-    for w in words:
-        sen.append(sno.stem(w))
-    product_reviews["reviewText"][i] = ' '.join(sen)
+    for i in range(len(product_reviews["reviewText"])):
+        sen = []
+        words = product_reviews["reviewText"][i].split()
+        for w in words:
+            sen.append(sno.stem(w))
+        product_reviews["reviewText"][i] = ' '.join(sen)
+
+    return product_reviews
 
 
 # combine stock market data with reviews to do recommendation
-def comb_stock():
+def comb_stock(raw_reviews):
+    price_temp = raw_reviews.groupby("main_cat", as_index=False).mean()
+    cat_avgprice = {}
+    for i in range(len(price_temp)):
+        cat_avgprice[price_temp["main_cat"][i]] = price_temp["new_price"][i]
+
     for idx in raw_reviews.index:
         cat = raw_reviews["main_cat"][idx]
         if not np.isnan(raw_reviews["new_price"][idx]):
             new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 100
         raw_reviews["overall"][idx] += new_rate
 
+    return raw_reviews
+
 
 # Function that builds user profiles
-def build_user_profiles(features):
+def build_user_profiles(features, product_reviews, raw_reviews):
+    # Construct a reverse map of product_indices and product asins
+    product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
+
+    # compute the average scores that users give products they bought
+    temp = raw_reviews.groupby("reviewerID", as_index=False).agg(np.array)
+    user_avgscore = {}
+    for i in range(len(temp)):
+        user_avgscore[temp["reviewerID"][i]] = temp["overall"][i].mean()
+
     user_matrix = []
     for idx in raw_reviews.index:
         user = raw_reviews["reviewerID"][idx]
         asin = raw_reviews["asin"][idx]
         product_idx = product_indices[asin]
+        # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
         score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0 
-        # +0.5 is becuase many users give 5.0 score, which will make the score weight becomes 0
         user_matrix.append(features[product_indices[asin]] * score_weight)
 
     # print(len(user_matrix[1]), len(user_matrix))
@@ -121,8 +94,47 @@ def build_user_profiles(features):
     return user_profile
 
 
+def review_text_tfidf(product_reviews):
+    vectorizer = TfidfVectorizer(stop_words='english')
+    X1 = vectorizer.fit_transform(product_reviews["reviewText"])
+    review_text = X1.toarray() # shape=(21, 1200)
+    # key: product_asin, value: list of features (words)
+    review_text_dict = {}
+    for i in range(len(review_text)):
+        review_text_dict[product_reviews["asin"][i]] = review_text[i]
+    # print(X1.shape)  # (21, 1200)
+    return review_text_dict, review_text, X1
+
+
+def build_initial_matrix():
+    raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
+    
+    raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
+    
+    # combine same product into one item reviews record
+    product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
+
+    product_reviews = process_review_text(product_reviews)
+
+    if args.ECO == "True":
+        raw_reviews = comb_stock(raw_reviews)
+
+    return product_reviews, raw_reviews
+
+
+# ==================================== Normal method to find similar items =================================
+# Compute the cosine similarity matrix
+def comp_cosine_similarity(user_profiles, X1, col, idx):
+    cosine_sim = cosine_similarity(user_profiles, X1)
+    cosine_sim = pd.DataFrame(cosine_sim)
+    cosine_sim.columns = col
+    cosine_sim.index = idx
+    # print(cosine_sim)
+    return cosine_sim
+
+
 # Function that takes in product title as input and outputs most similar products
-def get_recommendations(reviewerID, cosine_sim, product_reviews=product_reviews, threshold=0.1):
+def find_recommended_products(reviewerID, cosine_sim, product_reviews, threshold=0.1):
     products = cosine_sim.loc[reviewerID, :]
     # print(products)
     products_value = products.values
@@ -140,66 +152,68 @@ def get_recommendations(reviewerID, cosine_sim, product_reviews=product_reviews,
     recommend_products = []
     for i, idx in enumerate(res_scores):
         recommend_products.append([product_reviews["asin"][idx], sorted_product[i+1]])
-    return recommend_products    
+    return recommend_products
+# ==================================== Normal method to find similar items =================================
 
 
-# Construct a reverse map of product_indices and product asins
-product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
+# ==================================== LSH method to find similar items ====================================
+def find_recommended_products_by_lsh(user_name, FEATURES_NUM, utility_matrix, similarity_matrix):
+    all_product_utilities = {}
+    print("similarity_matrix", similarity_matrix)
+    lsh_algo = LSH(similarity_matrix, FEATURES_NUM)
+    similarity_dic = lsh_algo.build_similar_dict(user_name)
 
-# Product Reviews based Recommender:
-comb_stock()
+    for product_id in PRODUCT_DICT.keys():
+        # index of this product in every user's product list
+        idx = PRODUCT_DICT[product_id]
+        if utility_matrix[user_name][idx] == 0:
+            # ∑_(𝑦∈𝑁)〖𝑠_𝑥𝑦⋅𝑟_𝑦𝑖 〗, i is the product,
+            # y is every similar user, x is the predicted user
+            sum_weights = 0
+            # ∑_(𝑦∈𝑁)[𝑠_𝑥𝑦]
+            sum_similarity = 0
+            for sim_user in similarity_dic.keys():
+                sim_val = similarity_dic[sim_user]
+                utility = utility_matrix[sim_user][idx]
+                sum_weights += sim_val * utility
+                sum_similarity += sim_val
 
-vectorizer = TfidfVectorizer(stop_words='english')
-X1 = vectorizer.fit_transform(product_reviews["reviewText"])
-review_text = X1.toarray()
-# print(len(vectorizer.get_feature_names()))
-# print(X1.shape)  # (21, 1200)
+            if sum_similarity == 0:
+                utility_matrix[user_name][idx] = 0
+            else:
+                utility_matrix[user_name][idx] = sum_weights / sum_similarity
 
-user_profiles = build_user_profiles(review_text) # user number * number of review words
-# print("build_user_profiles", user_profiles)
+        all_product_utilities[product_id] = utility_matrix[user_name][idx]
 
-# use LSH to compute the similarity, which can 
-# reduce complexity and accelerate computing
-# forest = get_forest(user_profiles, permutations)
+    sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
+    recommended_product = []
+    for i in sort_products:
+        print(i)
+        recommended_product.append(i[0])
+        if len(recommended_product) > args.TOP_ITEM:
+            break
 
-# Compute the cosine similarity matrix
-cosine_sim = cosine_similarity(user_profiles, X1)
-cosine_sim = pd.DataFrame(cosine_sim)
-cosine_sim.columns = product_reviews["asin"]
-cosine_sim.index = raw_reviews["reviewerID"]
-# print(cosine_sim)
+    return recommended_product
+# ==================================== LSH method to find similar items ====================================
 
-## UNCOMMENT for the review-based method
-print("Reviews based Recommender:", get_recommendations(test_user, cosine_sim, threshold=0.1))
+
+## Review-based filter
+def content_based_filter():
+    product_reviews, raw_reviews = build_initial_matrix()
+    review_text_dict, review_text, X1 = review_text_tfidf(product_reviews)
+    user_profiles = build_user_profiles(review_text, product_reviews, raw_reviews)
+    print("=== Reviews based Recommender: ===")
+    # print("review_text", type(review_text), review_text.shape)
+
+    # find k recommended products
+    if args.LSH == "True":
+        recommended_products = find_recommended_products_by_lsh(args.USER, user_profiles.shape[1], review_text_dict, user_profiles)
+    else:
+        cosine_sim = comp_cosine_similarity(user_profiles, X1, product_reviews["asin"], raw_reviews["reviewerID"])
+        recommended_products = find_recommended_products(args.USER, cosine_sim, product_reviews, threshold=0.1)
+
+    print(recommended_products)
+
+
+content_based_filter()
 exit()
-
-
-# Product Features Based Recommender
-product_features = raw_reviews[["asin", "price", "main_cat"]]
-# print(product_features)
-product_features = product_features.drop_duplicates(["asin"])
-# print("drop_duplicates", product_features)
-
-
-# Build a feature soup and using IT-IDF to get matrix
-def create_soup(x):
-    return x['main_cat'] + ' ' + str(x['price'])
-
-
-product_features['soup'] = product_features.apply(create_soup, axis=1)
-# print(product_features["soup"])
-
-count_matrix = vectorizer.fit_transform(product_features['soup'])
-
-# Reset index of our main DataFrame and construct reverse mapping as before
-product_features = product_features.reset_index()
-product_indices = pd.Series(product_features.index, index=product_features['asin'])
-
-user_profiles = build_user_profiles(count_matrix.toarray())
-# Compute the cosine similarity matrix
-cosine_sim2 = cosine_similarity(user_profiles, count_matrix)
-cosine_sim2 = pd.DataFrame(cosine_sim)
-cosine_sim2.columns = product_reviews["asin"]
-cosine_sim2.index = raw_reviews["reviewerID"]
-
-print("Features based Recommender:", get_recommendations(test_user, cosine_sim2))
