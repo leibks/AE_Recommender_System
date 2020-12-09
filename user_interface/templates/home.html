@@ -1,7 +1,24 @@
 <form action = "http://localhost:5000/result" method = "POST">
-    <p>Customer ID: <input type = "text" name = "Name" /></p>
-    <p>Parameter 1  : <input type = "text" name = "Physics" /></p>
-    <p>Parameter 2  : <input type = "text" name = "chemistry" /></p>
-    <p>Parameter 3  : <input type ="text" name = "Mathematics" /></p>
+    <p>Customer ID: <input type = "text" name = "customer_id" /></p>
+
+    <p>
+        Consider economic factors?
+        <select name = "eco">
+            <option value ="True">Yes</option>
+            <option value ="False">No</option>
+        </select>
+    </p>
+
+    <p>
+        Whether use the locality sensitive hashing?
+        <select  name = "lsh">
+            <option value ="False">No</option>
+            <option value ="True">Yes</option>
+        </select>
+    </p>
+
+    <p>How many items provided for recommendation? <input type = "number" value="5" name = "top_item" /></p>
+
     <p><input type = "submit" value = "submit" /></p>
  </form>
+

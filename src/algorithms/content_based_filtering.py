@@ -17,6 +17,9 @@ parser.add_argument("--LSH", type=str, default="False", help="whether use the lo
 
 args = parser.parse_args()
 
+TEST_USER = ""
+ECO = "True"
+
 
 def process_price(row):
     out = {}
@@ -57,8 +60,8 @@ def comb_stock(raw_reviews):
     for idx in raw_reviews.index:
         cat = raw_reviews["main_cat"][idx]
         if not np.isnan(raw_reviews["new_price"][idx]):
-            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 100
-        raw_reviews["overall"][idx] += new_rate
+            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 1000
+        raw_reviews.loc[idx, "overall"] += new_rate
 
     return raw_reviews
 
@@ -83,12 +86,9 @@ def build_user_profiles(features, product_reviews, raw_reviews):
         score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0 
         user_matrix.append(features[product_indices[asin]] * score_weight)
 
-    # print(len(user_matrix[1]), len(user_matrix))
     user_matrix = pd.DataFrame(user_matrix)
-    # user_matrix.index = raw_reviews["reviewerID"]
     user_matrix['reviewerID'] = raw_reviews["reviewerID"] 
     # size of user_matrix = user number * number of review words
-    # print("user_matrix:", user_matrix)
 
     user_profile = user_matrix.groupby("reviewerID").mean()
     return user_profile
@@ -145,75 +145,65 @@ def find_recommended_products(reviewerID, cosine_sim, product_reviews, threshold
     
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
-    for i in range(1, min(10, len(sorted_index))):
+    for i in range(min(10, len(sorted_index))):
         if sorted_product[i] > threshold:
             res_scores.append(sorted_index[i])
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
-        recommend_products.append([product_reviews["asin"][idx], sorted_product[i+1]])
+        print(product_reviews["asin"][idx], sorted_product[i+1])
+        recommend_products.append(product_reviews["asin"][idx])
+
     return recommend_products
 # ==================================== Normal method to find similar items =================================
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_lsh(user_name, FEATURES_NUM, utility_matrix, similarity_matrix):
+def find_recommended_products_by_lsh(user_name, FEATURES_NUM, review_text_dict, user_features):
     all_product_utilities = {}
-    print("similarity_matrix", similarity_matrix)
-    lsh_algo = LSH(similarity_matrix, FEATURES_NUM)
+    review_text_dict[user_name] = np.array(user_features)
+    # print("review_text_dict", review_text_dict, len(review_text_dict.keys()))
+    lsh_algo = LSH(review_text_dict, FEATURES_NUM)
     similarity_dic = lsh_algo.build_similar_dict(user_name)
+    # print("similarity_dic", similarity_dic)
+    sorted_similarity_dict = {k: v for k, v in sorted(similarity_dic.items(), key=lambda item: item[1], reverse=True)}
 
-    for product_id in PRODUCT_DICT.keys():
-        # index of this product in every user's product list
-        idx = PRODUCT_DICT[product_id]
-        if utility_matrix[user_name][idx] == 0:
-            # ∑_(𝑦∈𝑁)〖𝑠_𝑥𝑦⋅𝑟_𝑦𝑖 〗, i is the product,
-            # y is every similar user, x is the predicted user
-            sum_weights = 0
-            # ∑_(𝑦∈𝑁)[𝑠_𝑥𝑦]
-            sum_similarity = 0
-            for sim_user in similarity_dic.keys():
-                sim_val = similarity_dic[sim_user]
-                utility = utility_matrix[sim_user][idx]
-                sum_weights += sim_val * utility
-                sum_similarity += sim_val
-
-            if sum_similarity == 0:
-                utility_matrix[user_name][idx] = 0
-            else:
-                utility_matrix[user_name][idx] = sum_weights / sum_similarity
-
-        all_product_utilities[product_id] = utility_matrix[user_name][idx]
-
-    sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
-    for i in sort_products:
-        print(i)
-        recommended_product.append(i[0])
-        if len(recommended_product) > args.TOP_ITEM:
-            break
+    for key in sorted_similarity_dict.keys():
+        if not key == user_name:
+            recommended_product.append(key)
+            print(key, sorted_similarity_dict[key])
+            if len(recommended_product) > args.TOP_ITEM:
+                break
 
     return recommended_product
 # ==================================== LSH method to find similar items ====================================
 
 
 ## Review-based filter
+# def content_based_filter(user, eco, LSH):
 def content_based_filter():
     product_reviews, raw_reviews = build_initial_matrix()
     review_text_dict, review_text, X1 = review_text_tfidf(product_reviews)
     user_profiles = build_user_profiles(review_text, product_reviews, raw_reviews)
+    user_profiles_dict = user_profiles.T.to_dict('list')
     print("=== Reviews based Recommender: ===")
-    # print("review_text", type(review_text), review_text.shape)
 
+    ECO = args.ECO
+
+    if args.USER:
+        TEST_USER = args.USER
+    else:
+        TEST_USER = user
     # find k recommended products
     if args.LSH == "True":
-        recommended_products = find_recommended_products_by_lsh(args.USER, user_profiles.shape[1], review_text_dict, user_profiles)
+        recommended_products = find_recommended_products_by_lsh(TEST_USER, user_profiles.shape[1], review_text_dict, user_profiles_dict[TEST_USER])
     else:
         cosine_sim = comp_cosine_similarity(user_profiles, X1, product_reviews["asin"], raw_reviews["reviewerID"])
-        recommended_products = find_recommended_products(args.USER, cosine_sim, product_reviews, threshold=0.1)
+        recommended_products = find_recommended_products(TEST_USER, cosine_sim, product_reviews, threshold=0.1)
 
     print(recommended_products)
+    return recommended_products
 
 
-content_based_filter()
-exit()
+recommended_products = content_based_filter()
