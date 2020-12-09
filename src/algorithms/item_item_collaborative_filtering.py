@@ -13,15 +13,17 @@ from src.algorithms.lsh_for_cosine_similarity import *
 import argparse
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
+parser.add_argument("--USER", type=str, default=None, help="the user who is recommended")
 parser.add_argument("--TOP_ITEM", type=int, default=10, help="how many items provided for recommendation")
 parser.add_argument("--HIGH_VALUE", type=float, default=0.9, help="identify high value products")
 parser.add_argument("--LOW_VALUE", type=float, default=0.1, help="identify low value products")
-parser.add_argument("--ECO", type=bool, default=True, help="consider economic factors")
+parser.add_argument("--ECO", type=str, default="True", help="consider economic factors")
+parser.add_argument("--LSH", type=str, default="True", help="whether use the locality sensitive hashing")
 
 args = parser.parse_args()
 
 
+# ==================================== Set up matrix ====================================
 # key: product_id, value: a list of users
 # (index in the list points to the related user name by using USER_DICT)
 def build_item_matrix(users, products):
@@ -84,9 +86,10 @@ def set_up_item_matrix():
     product_ids = users_products[1]
     utility_matrix = build_item_matrix(users, product_ids)
     similarity_matrix = build_item_matrix(users, product_ids)
-    build_item_utility_matrix(utility_matrix, df, args.ECO)
+    build_item_utility_matrix(utility_matrix, df, True if args.ECO == "True" else False)
     build_item_similarity_matrix(similarity_matrix, utility_matrix, users)
     return [utility_matrix, similarity_matrix]
+# ==================================== Set up matrix ====================================
 
 
 # ==================================== Normal method to find similar items ====================================
@@ -183,6 +186,7 @@ def find_recommended_products_by_lsh(user_name, utility_matrix, similarity_matri
             break
 
     return recommended_product
+# ==================================== LSH method to find similar items ====================================
 
 
 def item_collaborative_filter():
@@ -193,7 +197,10 @@ def item_collaborative_filter():
     # store the similarity matrix into the file as the model for saving training time
 
     # find k recommended products
-    recommended_products = find_recommended_products_by_lsh(args.USER, utility_matrix, similarity_matrix)
+    if args.LSH == "True":
+        recommended_products = find_recommended_products_by_lsh(args.USER, utility_matrix, similarity_matrix)
+    else:
+        recommended_products = find_recommended_products(args.USER, utility_matrix, similarity_matrix)
     print(recommended_products)
 
 
