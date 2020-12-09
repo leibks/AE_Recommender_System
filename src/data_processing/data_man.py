@@ -82,6 +82,7 @@ def process_data(names, directory):
                 meta_df['main_cat'] = name
             else:
                 meta_df = meta_df[['title', 'main_cat', 'price', 'asin']]
+            meta_df = meta_df[meta_df['title'].str.contains('\n')==False]
             print('metadata size ', len(meta_df))
             df = pd.merge(data_df, meta_df, how='left', on='asin')
             df = df.loc[df.astype(str).drop_duplicates().index]  # remove duplicates
