@@ -50,5 +50,5 @@ Without working directory input parameter, the script will download all raw data
 ## User Interface
   under the AE_Recommender_System:
   * run command `python user_interface/app.py` to start web server
-  * Go to http://127.0.0.1:5000/ to test systerm
+  * Go to http://127.0.0.1:5000/ to test the system
   
