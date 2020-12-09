@@ -41,8 +41,8 @@ Without working directory input parameter, the script will download all raw data
   * optional arguments (above two):
     * -h, --help                  (show this help message and exit)
     * --TOP_ITEM TOP_ITEM         (how many items provided for recommendation)
-    * --HIGH_VALUE HIGH_VALUE     (identify high value products)
-    * --LOW_VALUE LOW_VALUE       (identify low value products)
+    * --HIGH_RATE HIGH_VALUE      (identify rate of determining high value products)
+    * --LOW_RATE LOW_VALUE        (identify rate of determining low value products)
     * --ECO ECO                   (consider economic factors)
     * --LSH LSH                   (whether use the locality sensitive hashing)
   * run command `python src/algorithms/content_based_filtering.py test_reviewerID` to test content based algo

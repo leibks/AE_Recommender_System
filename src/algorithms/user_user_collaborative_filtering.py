@@ -15,8 +15,8 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
 parser.add_argument("--TOP_ITEM", type=int, default=10, help="how many items provided for recommendation")
-parser.add_argument("--HIGH_VALUE", type=float, default=0.9, help="identify high value products")
-parser.add_argument("--LOW_VALUE", type=float, default=0.1, help="identify low value products")
+parser.add_argument("--HIGH_RATE", type=float, default=0.9, help="identify rate of determining high value products")
+parser.add_argument("--LOW_RATE", type=float, default=0.1, help="iidentify rate of determining low value products")
 parser.add_argument("--ECO", type=str, default="True", help="consider economic factors")
 parser.add_argument("--LSH", type=str, default="True", help="whether use the locality sensitive hashing")
 
@@ -81,7 +81,7 @@ def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids)
 def set_up_user_matrix():
     df = pd.read_csv('resource/sample_data/joined_sample_electronics.csv')
     users_products = fetch_users_products(df)
-    identify_price_in_items(df["price"].tolist(), args.HIGH_VALUE, args.LOW_VALUE)
+    identify_price_in_items(df["price"].tolist(), args.HIGH_RATE, args.LOW_RATE)
     users = users_products[0]
     product_ids = users_products[1]
     utility_matrix = build_user_matrix(users, product_ids)
