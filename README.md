@@ -37,9 +37,9 @@ Without working directory input parameter, the script will download all raw data
   * run command `python src/algorithms/user_user_collaborative_filtering.py` to test user collaborative algo
   * run command `python src/algorithms/item_item_collaborative_filtering.py` to test item collaborative algo
   * run command `python src/algorithms/content_based_filtering.py` to test content based algo
-  * required arguments (above two):
+  * required arguments (above three):
     * --USER USER                 (the user who is recommended, eg: Tazman32)
-  * optional arguments (above two):
+  * optional arguments (above three):
     * -h, --help                  (show this help message and exit)
     * --TOP_ITEM TOP_ITEM         (how many items provided for recommendation)
     * --HIGH_RATE HIGH_VALUE      (identify rate of determining high value products)
