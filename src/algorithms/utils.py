@@ -4,29 +4,19 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 
 
-# key: product_id, value: index in each user's product_list
-PRODUCT_DICT = {}
-# key: user_name, value: index in each product's buyers_list
-USER_DICT = {}
-# any product's price is higher than it will be regard as the high price product
-HIGH_PRICE = 0
-# any product's price is lower than it will be regard as the low price product
-LOW_PRICE = 0
-
-
 def fetch_users_products(df, algo="user"):
     # if the algo is user-user, dic is the user dictionary
     # if the algo is item-item, dic is the product dictionary
     dic = {}
 
-    username_list = df["reviewerName"].tolist()
+    user_id_list = df["reviewerID"].tolist()
     product_id_list = df["asin"].tolist()
     users = set()
     products = set()
 
-    for user_name in username_list:
-        if user_name not in users:
-            users.add(user_name)
+    for user_id in user_id_list:
+        if user_id not in users:
+            users.add(user_id)
 
     for product in product_id_list:
         if product not in products:
@@ -48,10 +38,14 @@ def fetch_users_products(df, algo="user"):
 
 # clean up the given format of the price and return the value of the price
 def clean_price(price):
+    if price[:1] != '$':
+        return 0
     if not isinstance(price, float):
-        if price[:1] != '$':
-            return 0
-        price = float(price[1:])
+        if "-" in price:
+            prices = price.split(" - ")
+            price = (float(prices[0][1:].replace(",", "")) + float(prices[1][1:].replace(",", ""))) / 2
+        else:
+            price = float(price[1:].replace(",",""))
     return price
 
 

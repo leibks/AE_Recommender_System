@@ -15,26 +15,26 @@ parser.add_argument("--LSH", type=str, default="True", help="whether use the loc
 args = parser.parse_args()
 
 
-# Recommender System Model: build required matrix based on dataset and
+# Recommender System Module: build required matrix based on dataset and
 # select different algorithms to find the recommended products by giving
-# any user name.
+# any user id.
 # (1) data will be imported from the given file
 # (2) different algorithms need different matrix structures
-class Model:
+class SystemModule:
 
     def __init__(self, num_recommend=10, high_rate=0.9, low_rate=0.1):
         self.num_recommend = num_recommend
         self.high_rate = high_rate
         self.low_rate = low_rate
-        # key: user_name, value: index in each product's buyers_list
+        # key: user_id, value: index in each product's buyers_list
         self.user_dict = {}
         # key: product_id, value: index in each user's product_list
         self.product_dict = {}
-        # key: user_name, value: a list of utilities (preference) to every product (product_list)
+        # key: user_id, value: a list of utilities (preference) to every product (product_list)
         self.user_utility_matrix = {}
         # key: product_id, value: a list of utilities provided by every user (buyers_list)
         self.product_utility_matrix = {}
-        # key: user_name, value: a list of feature value calculated by
+        # key: user_id, value: a list of feature value calculated by
         # (rate - average rate for this user) (product_list)
         self.user_sim_matrix = {}
         # key: product_id, value: a list of feature value calculated by
@@ -62,26 +62,26 @@ class Model:
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
 
-    def find_recommended_products(self, user_name, algo, lsh=True):
+    def find_recommended_products(self, user_id, algo, lsh):
         recommended_products = []
         if algo == "user":
             if lsh:
                 recommended_products = find_recommended_products_by_uu_lsh(
-                    user_name, self.user_utility_matrix, self.user_sim_matrix, self.product_dict, self.num_recommend)
+                    user_id, self.user_utility_matrix, self.user_sim_matrix, self.product_dict, self.num_recommend)
             else:
                 recommended_products = find_recommended_products_by_uu(
-                    user_name, self.user_utility_matrix, self.user_sim_matrix, self.product_dict, self.num_recommend)
+                    user_id, self.user_utility_matrix, self.user_sim_matrix, self.product_dict, self.num_recommend)
         elif algo == "item":
             if lsh:
                 recommended_products = find_recommended_products_by_ii_lsh(
-                    user_name, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
+                    user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
             else:
                 recommended_products = find_recommended_products_by_ii(
-                    user_name, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
+                    user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
 
         print(recommended_products)
 
 
-model = Model()
-model.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "user")
-model.find_recommended_products("Tazman32", "user")
+m = SystemModule()
+m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_2018.csv", "item", eco=False)
+m.find_recommended_products("A2EM03F99X3RJZ", "item", lsh=True)

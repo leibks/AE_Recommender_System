@@ -10,7 +10,7 @@ from src.algorithms.lsh_for_cosine_similarity import *
 
 
 # ==================================== Set up matrix ====================================
-# key: user_name, value: a list of values
+# key: user_id, value: a list of values
 # (index in the list points to the related product id by using PRODUCT_DICT)
 def build_user_matrix(users, products):
     matrix = {}
@@ -26,26 +26,26 @@ def build_user_matrix(users, products):
 # , each row represent a user, and each column represent a product
 def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_price, consider_economic=False):
     for index in df.index:
-        name = df["reviewerName"][index]
+        user_id = df["reviewerID"][index]
         product_id = df["asin"][index]
         rate = df["overall"][index]
-        stock_rate = df["stockReturn"][index]
         price = clean_price(df["price"][index])
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
         if consider_economic:
+            stock_rate = df["stockReturn"][index]
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:
             economic_factor = 0
-        utility_matrix[name][product_dic[product_id]] = rate + economic_factor
+        utility_matrix[user_id][product_dic[product_id]] = rate + economic_factor
 
 
 # value is the (rate to the product for the user - average rate for the user),
 # each row represent a user's a list of products
 def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids, product_dic):
-    for name in similarity_matrix.keys():
-        products = utility_matrix[name]
+    for user_id in similarity_matrix.keys():
+        products = utility_matrix[user_id]
         sum_rates = 0
         length = 0
         for rate in products:
@@ -54,18 +54,18 @@ def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids,
                 length += 1
         average = sum_rates / length
         for product_id in product_ids:
-            if utility_matrix[name][product_dic[product_id]] != 0:
-                similarity_matrix[name][product_dic[product_id]] \
-                    = utility_matrix[name][product_dic[product_id]] - average
+            if utility_matrix[user_id][product_dic[product_id]] != 0:
+                similarity_matrix[user_id][product_dic[product_id]] \
+                    = utility_matrix[user_id][product_dic[product_id]] - average
 # ==================================== Set up matrix ====================================
 
 
 # ==================================== Normal method to find similar items ====================================
-def find_similar_users(user_name, similarity_matrix):
+def find_similar_users(user_id, similarity_matrix):
     similar_users = {}
-    given_user_vec = np.array([similarity_matrix[user_name]])
+    given_user_vec = np.array([similarity_matrix[user_id]])
     for user in similarity_matrix.keys():
-        if user != user_name:
+        if user != user_id:
             compare_user_vec = np.array([similarity_matrix[user]])
             cos_sim_value = cosine_similarity(given_user_vec, compare_user_vec).item(0)
             if cos_sim_value > 0:
@@ -93,18 +93,18 @@ def predict_single_product_utility(utility_matrix, similar_res, product_id, prod
     return sum_weights / sum_similarity
 
 
-def find_recommended_products_by_uu(user_name, utility_matrix, similarity_matrix, product_dic, num_recommend):
+def find_recommended_products_by_uu(user_id, utility_matrix, similarity_matrix, product_dic, num_recommend):
     # find top k similar users for the given user
-    similar_users = find_similar_users(user_name, similarity_matrix)
+    similar_users = find_similar_users(user_id, similarity_matrix)
 
     all_product_utilities = {}
     for product_id in product_dic.keys():
         idx = product_dic[product_id]
-        if utility_matrix[user_name][idx] == 0:
-            utility_matrix[user_name][idx] \
+        if utility_matrix[user_id][idx] == 0:
+            utility_matrix[user_id][idx] \
                 = predict_single_product_utility(utility_matrix, similar_users, product_id, product_dic)
 
-        all_product_utilities[product_id] = utility_matrix[user_name][idx]
+        all_product_utilities[product_id] = utility_matrix[user_id][idx]
 
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
@@ -119,15 +119,15 @@ def find_recommended_products_by_uu(user_name, utility_matrix, similarity_matrix
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_uu_lsh(user_name, utility_matrix, similarity_matrix, product_dic, num_recommend):
+def find_recommended_products_by_uu_lsh(user_id, utility_matrix, similarity_matrix, product_dic, num_recommend):
     all_product_utilities = {}
     lsh_algo = LSH(similarity_matrix, len(product_dic))
-    similarity_dic = lsh_algo.build_similar_dict(user_name)
+    similarity_dic = lsh_algo.build_similar_dict(user_id)
 
     for product_id in product_dic.keys():
         # index of this product in every user's product list
         idx = product_dic[product_id]
-        if utility_matrix[user_name][idx] == 0:
+        if utility_matrix[user_id][idx] == 0:
             # ∑_(𝑦∈𝑁)〖𝑠_𝑥𝑦⋅𝑟_𝑦𝑖 〗, i is the product,
             # y is every similar user, x is the predicted user
             sum_weights = 0
@@ -140,11 +140,11 @@ def find_recommended_products_by_uu_lsh(user_name, utility_matrix, similarity_ma
                 sum_similarity += sim_val
 
             if sum_similarity == 0:
-                utility_matrix[user_name][idx] = 0
+                utility_matrix[user_id][idx] = 0
             else:
-                utility_matrix[user_name][idx] = sum_weights / sum_similarity
+                utility_matrix[user_id][idx] = sum_weights / sum_similarity
 
-        all_product_utilities[product_id] = utility_matrix[user_name][idx]
+        all_product_utilities[product_id] = utility_matrix[user_id][idx]
 
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
