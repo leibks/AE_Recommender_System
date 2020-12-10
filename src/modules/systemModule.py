@@ -70,6 +70,7 @@ class SystemModule:
             self.user_dict = fetch_res[2]
             self.product_utility_matrix = build_item_matrix(users, product_ids)
             self.product_sim_matrix = build_item_matrix(users, product_ids)
+            print("Build the initial matrix")
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
         elif algo == "content":
@@ -77,6 +78,7 @@ class SystemModule:
             self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
             self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
             self.user_profiles_dict = self.user_profiles.T.to_dict('list')
+        print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
         recommended_products = []
@@ -109,6 +111,6 @@ class SystemModule:
 
 
 m = SystemModule()
-m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_2018.csv", "item", eco=False)
-m.find_recommended_products("A2EM03F99X3RJZ", "item", lsh=True)
+m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_2018.csv", "user", eco=False)
+m.find_recommended_products("A1UVZHFDTI4FPK", "user", lsh=True)
 

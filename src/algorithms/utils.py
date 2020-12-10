@@ -2,6 +2,7 @@ import numpy as np
 import math
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
 
 
 def fetch_users_products(df, algo="user"):
@@ -14,22 +15,22 @@ def fetch_users_products(df, algo="user"):
     users = set()
     products = set()
 
-    for user_id in user_id_list:
+    for user_id in tqdm(user_id_list, desc="Build User List Loading ...."):
         if user_id not in users:
             users.add(user_id)
 
-    for product in product_id_list:
+    for product in tqdm(product_id_list, desc="Build Product List Loading ...."):
         if product not in products:
             products.add(product)
 
     # set up related dictionary
     start_index = 0
     if algo == "user":
-        for product in products:
+        for product in tqdm(products, desc="Build Product Dictionary Loading ...."):
             dic[product] = start_index
             start_index += 1
     elif algo == "item":
-        for user in users:
+        for user in tqdm(users, desc="Build User Dictionary Loading ...."):
             dic[user] = start_index
             start_index += 1
 
@@ -45,7 +46,7 @@ def clean_price(price):
             prices = price.split(" - ")
             price = (float(prices[0][1:].replace(",", "")) + float(prices[1][1:].replace(",", ""))) / 2
         else:
-            price = float(price[1:].replace(",",""))
+            price = float(price[1:].replace(",", ""))
     return price
 
 
@@ -60,7 +61,7 @@ def clean_price(price):
 def identify_price_in_items(prices, high_rate, low_rate):
     unique_prices = []
     seen = set()
-    for price in prices:
+    for price in tqdm(prices, desc="Identify prices Loading ...."):
         price = clean_price(price)
         if price != 0 and price not in seen:
             seen.add(price)

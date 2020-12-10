@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn import random_projection
 from sklearn.metrics.pairwise import cosine_similarity
+from tqdm import tqdm
 
 
 # The hash table class that contains the hash values for similar items.
@@ -35,7 +36,7 @@ class HashTable:
 
     def build_hash_table(self, input_matrix, limit=None):
         count = 0
-        for item_name in input_matrix.keys():
+        for item_name in tqdm(input_matrix.keys(), desc="Build Hash Table Loading ...."):
             vec = np.array([input_matrix[item_name]])
             self.set_hash_value(vec, item_name)
             count += 1
@@ -56,7 +57,7 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=10, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=8, num_tables=2, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.random_type = random_type
@@ -71,7 +72,7 @@ class LSH:
     def build_similar_dict(self, given_item):
         similar_dic = {}
         given_item_vec = np.array([self.input_matrix[given_item]])
-        for ht in self.hash_tables:
+        for ht in tqdm(self.hash_tables, desc="Build Similar Items Dictionary Loading ...."):
             list_sim_items = ht.fetch_similar_items(given_item)
             for item in list_sim_items:
                 if item not in similar_dic and item != given_item:

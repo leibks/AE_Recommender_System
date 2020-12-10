@@ -1,3 +1,4 @@
+from tqdm import *
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
@@ -25,7 +26,7 @@ def build_user_matrix(users, products):
 # utility (value) consider the rate from 0 to 5 and economic factor
 # , each row represent a user, and each column represent a product
 def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_price, consider_economic=False):
-    for index in df.index:
+    for index in tqdm(df.index, desc="Build Utility Matrix Loading ...."):
         user_id = df["reviewerID"][index]
         product_id = df["asin"][index]
         rate = df["overall"][index]
@@ -44,7 +45,7 @@ def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_p
 # value is the (rate to the product for the user - average rate for the user),
 # each row represent a user's a list of products
 def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids, product_dic):
-    for user_id in similarity_matrix.keys():
+    for user_id in tqdm(similarity_matrix.keys(), desc="Build Sim Matrix Loading ...."):
         products = utility_matrix[user_id]
         sum_rates = 0
         length = 0
@@ -98,7 +99,7 @@ def find_recommended_products_by_uu(user_id, utility_matrix, similarity_matrix, 
     similar_users = find_similar_users(user_id, similarity_matrix)
 
     all_product_utilities = {}
-    for product_id in product_dic.keys():
+    for product_id in tqdm(product_dic.keys(), desc="Find Recommendation Loading ...."):
         idx = product_dic[product_id]
         if utility_matrix[user_id][idx] == 0:
             utility_matrix[user_id][idx] \
@@ -124,7 +125,7 @@ def find_recommended_products_by_uu_lsh(user_id, utility_matrix, similarity_matr
     lsh_algo = LSH(similarity_matrix, len(product_dic))
     similarity_dic = lsh_algo.build_similar_dict(user_id)
 
-    for product_id in product_dic.keys():
+    for product_id in tqdm(product_dic.keys(), desc="Find Recommendation(LSH) Loading ...."):
         # index of this product in every user's product list
         idx = product_dic[product_id]
         if utility_matrix[user_id][idx] == 0:

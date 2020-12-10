@@ -5,3 +5,4 @@ nltk==3.5
 wget==3.2
 requests==2.25.0
 datasketch==1.5.1
+tqdm==4.54.1
