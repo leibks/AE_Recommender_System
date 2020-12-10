@@ -6,8 +6,8 @@ from tqdm import tqdm
 
 
 def fetch_users_products(df, algo="user"):
-    # if the algo is user-user, dic is the user dictionary
-    # if the algo is item-item, dic is the product dictionary
+    # if the algo is user-user, dic is the product dictionary
+    # if the algo is item-item, dic is the user dictionary
     dic = {}
 
     user_id_list = df["reviewerID"].tolist()
@@ -39,6 +39,8 @@ def fetch_users_products(df, algo="user"):
 
 # clean up the given format of the price and return the value of the price
 def clean_price(price):
+    if isinstance(price, float):
+        return price
     if price[:1] != '$':
         return 0
     if not isinstance(price, float):

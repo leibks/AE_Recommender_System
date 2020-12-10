@@ -15,7 +15,7 @@ from src.algorithms.lsh_for_cosine_similarity import *
 # (index in the list points to the related product id by using PRODUCT_DICT)
 def build_user_matrix(users, products):
     matrix = {}
-    for user in users:
+    for user in tqdm(users, desc="Build Initial User Matrix Loading ...."):
         matrix[user] = []
         for i in products:
             matrix[user].append(0)

@@ -10,7 +10,7 @@ class HashTable:
 
     # random_type="gau" means using gaussian random projection
     # random_type="sparse" means using sparse random projection
-    def __init__(self, input_dim, hash_size=3, random_type="gau"):
+    def __init__(self, input_dim, hash_size, random_type="gau"):
         self.input_dim = input_dim
         # key: hash value, value: a list of item names
         self.hash_table = {}
@@ -57,7 +57,7 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, hash_size=8, num_tables=2, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=5, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.random_type = random_type
@@ -72,9 +72,9 @@ class LSH:
     def build_similar_dict(self, given_item):
         similar_dic = {}
         given_item_vec = np.array([self.input_matrix[given_item]])
-        for ht in tqdm(self.hash_tables, desc="Build Similar Items Dictionary Loading ...."):
+        for ht in self.hash_tables:
             list_sim_items = ht.fetch_similar_items(given_item)
-            for item in list_sim_items:
+            for item in tqdm(list_sim_items, desc="Fetch Similar Users Loading ...."):
                 if item not in similar_dic and item != given_item:
                     compare_product_vec = np.array([self.input_matrix[item]])
                     cos_sim_value = cosine_similarity(given_item_vec, compare_product_vec).item(0)

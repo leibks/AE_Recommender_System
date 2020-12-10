@@ -111,6 +111,10 @@ class SystemModule:
 
 
 m = SystemModule()
-m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_2018.csv", "user", eco=False)
-m.find_recommended_products("A1UVZHFDTI4FPK", "user", lsh=True)
+m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "content")
+m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+# m.find_recommended_products("Tazman32", "item", lsh=True)
+# m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_2018.csv", "item", eco=False)
+# # m.find_recommended_products("A1UVZHFDTI4FPK", "user", lsh=True)
+# m.find_recommended_products("S. Ortega", "item", lsh=True)
 
