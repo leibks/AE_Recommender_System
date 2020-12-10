@@ -17,9 +17,6 @@ parser.add_argument("--LSH", type=str, default="False", help="whether use the lo
 
 args = parser.parse_args()
 
-TEST_USER = ""
-ECO = "True"
-
 
 def process_price(row):
     out = {}
@@ -191,16 +188,12 @@ def content_based_filter():
 
     ECO = args.ECO
 
-    if args.USER:
-        TEST_USER = args.USER
-    else:
-        TEST_USER = user
     # find k recommended products
     if args.LSH == "True":
-        recommended_products = find_recommended_products_by_lsh(TEST_USER, user_profiles.shape[1], review_text_dict, user_profiles_dict[TEST_USER])
+        recommended_products = find_recommended_products_by_lsh(args.USER, user_profiles.shape[1], review_text_dict, user_profiles_dict[args.USER])
     else:
         cosine_sim = comp_cosine_similarity(user_profiles, X1, product_reviews["asin"], raw_reviews["reviewerID"])
-        recommended_products = find_recommended_products(TEST_USER, cosine_sim, product_reviews, threshold=0.1)
+        recommended_products = find_recommended_products(args.USER, cosine_sim, product_reviews, threshold=0.1)
 
     print(recommended_products)
     return recommended_products
