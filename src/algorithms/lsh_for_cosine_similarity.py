@@ -9,7 +9,7 @@ class HashTable:
 
     # random_type="gau" means using gaussian random projection
     # random_type="sparse" means using sparse random projection
-    def __init__(self, input_dim, random_type="gau", hash_size=3):
+    def __init__(self, input_dim, hash_size=3, random_type="gau"):
         self.input_dim = input_dim
         # key: hash value, value: a list of item names
         self.hash_table = {}
@@ -27,6 +27,7 @@ class HashTable:
         new_vec = np.dot(input_vec, self.projections.T)[0]
         bitwise = (new_vec > 0).astype('int')
         hash_value = ''.join(bitwise.astype('str'))
+        # "01010"
         self.hash_values[item_name] = hash_value
         if hash_value not in self.hash_table.keys():
             self.hash_table[hash_value] = []
@@ -55,13 +56,13 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, num_tables=10, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=10, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.random_type = random_type
         self.hash_tables = []
         for i in range(self.num_tables):
-            ht = HashTable(input_dim)
+            ht = HashTable(input_dim, hash_size=hash_size)
             ht.build_hash_table(input_matrix)
             self.hash_tables.append(ht)
 
