@@ -1,5 +1,6 @@
 from src.algorithms.user_user_collaborative_filtering import *
 from src.algorithms.item_item_collaborative_filtering import *
+from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
 
 import argparse
@@ -40,6 +41,14 @@ class Model:
         # key: product_id, value: a list of feature value calculated by
         # (rate - average rate for this product) (buyers_list)
         self.product_sim_matrix = {}
+        # index: reviewerID, columns: features (words in review text)
+        self.user_profiles = pd.DataFrame()
+        # key: product asin, value: features (words in review text)
+        self.review_text_dict = {}
+        # key: reviewerID, value: features (words in review text)
+        self.user_profiles_dict = {}
+        # use TF-IDF on review text
+        self.tfidf_review = pd.DataFrame()
 
     def set_up_matrix(self, file_path, algo, eco=True):
         df = pd.read_csv(file_path)
@@ -61,6 +70,11 @@ class Model:
             self.product_sim_matrix = build_item_matrix(users, product_ids)
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
+        elif algo == "content":
+            product_reviews, raw_reviews = build_initial_matrix(eco)
+            self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(product_reviews)
+            self.user_profiles = build_user_profiles(review_text, product_reviews, raw_reviews)
+            self.user_profiles_dict = self.user_profiles.T.to_dict('list')
 
     def find_recommended_products(self, user_name, algo, lsh=True):
         recommended_products = []
@@ -78,10 +92,19 @@ class Model:
             else:
                 recommended_products = find_recommended_products_by_ii(
                     user_name, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
+        elif algo == "content":
+            if lsh:
+                recommended_products = find_recommended_products_by_content_lsh(
+                    user_name, self.user_profiles.shape[1], self.review_text_dict, self.user_profiles_dict[user_name], self.num_recommend)
+            else:
+                cosine_sim = comp_cosine_similarity(self.user_profiles, self.tfidf_review, self.product_reviews["asin"], self.raw_reviews["reviewerID"])
+                recommended_products = find_recommended_products_by_content(
+                    user_name, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)
 
         print(recommended_products)
 
 
 model = Model()
-model.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "user")
-model.find_recommended_products("Tazman32", "user")
+model.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "content")
+# model.find_recommended_products("Tazman32", "user")
+model.find_recommended_products("A1XSPKZ8HHSBX2", "content")
