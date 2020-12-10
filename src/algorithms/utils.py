@@ -15,8 +15,9 @@ LOW_PRICE = 0
 
 
 def fetch_users_products(df, algo="user"):
-    global PRODUCT_DICT
-    global USER_DICT
+    # if the algo is user-user, dic is the user dictionary
+    # if the algo is item-item, dic is the product dictionary
+    dic = {}
 
     username_list = df["reviewerName"].tolist()
     product_id_list = df["asin"].tolist()
@@ -31,17 +32,27 @@ def fetch_users_products(df, algo="user"):
         if product not in products:
             products.add(product)
 
+    # set up related dictionary
     start_index = 0
     if algo == "user":
         for product in products:
-            PRODUCT_DICT[product] = start_index
+            dic[product] = start_index
             start_index += 1
     elif algo == "item":
         for user in users:
-            USER_DICT[user] = start_index
+            dic[user] = start_index
             start_index += 1
 
-    return [list(users), list(products)]
+    return [list(users), list(products), dic]
+
+
+# clean up the given format of the price and return the value of the price
+def clean_price(price):
+    if not isinstance(price, float):
+        if price[:1] != '$':
+            return 0
+        price = float(price[1:])
+    return price
 
 
 # Identify the the high/low price for all products based on given rate,
@@ -51,36 +62,30 @@ def fetch_users_products(df, algo="user"):
 #     prices (A list of floats): a list of prices in the dataset
 #     high_rate (float): the percentage that determine the threshold of high-price product
 #     low_rate (float): the percentage that determine the threshold of low-price product
-# Returns:
-#     None
+# Returns: [identified high value, identified low value]
 def identify_price_in_items(prices, high_rate, low_rate):
-    global HIGH_PRICE
-    global LOW_PRICE
-
     unique_prices = []
     seen = set()
     for price in prices:
-        if not isinstance(price, float):
-            if price[:1] != '$':
-                continue
-            price = float(price[1:])
-        if price not in seen:
+        price = clean_price(price)
+        if price != 0 and price not in seen:
             seen.add(price)
             unique_prices.append(price)
 
     unique_prices.sort()
     high_threshold = math.floor(len(unique_prices) * high_rate)
     low_threshold = math.floor(len(unique_prices) * low_rate)
-    HIGH_PRICE = unique_prices[high_threshold]
-    LOW_PRICE = unique_prices[low_threshold]
+    high_price = unique_prices[high_threshold]
+    low_price = unique_prices[low_threshold]
 
-    return [HIGH_PRICE, LOW_PRICE]
+    return [high_price, low_price]
 
 
-def get_economic_factor(stock_rate, price, rate):
+# calculate the economic factor that affects the utility of the product to the user
+def get_economic_factor(stock_rate, price, rate, high_price, low_price):
     if price == 0:
         return 0
-    if (price >= HIGH_PRICE and stock_rate < 0) or (price <= LOW_PRICE and stock_rate > 0):
+    if (price >= high_price and stock_rate < 0) or (price <= low_price and stock_rate > 0):
         return rate * abs(stock_rate) * 10
     else:
         return 0
