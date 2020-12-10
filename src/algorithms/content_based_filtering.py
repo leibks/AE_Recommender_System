@@ -5,19 +5,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 from src.algorithms.lsh_for_cosine_similarity import *
-import argparse
-
-parser = argparse.ArgumentParser()
-parser.add_argument("--USER", type=str, default=None, help="the user who is recommended")
-parser.add_argument("--TOP_ITEM", type=int, default=10, help="how many items provided for recommendation")
-parser.add_argument("--HIGH_RATE", type=float, default=0.9, help="identify rate of determining high value products")
-parser.add_argument("--LOW_RATE", type=float, default=0.1, help="iidentify rate of determining low value products")
-parser.add_argument("--ECO", type=str, default="True", help="consider economic factors")
-parser.add_argument("--LSH", type=str, default="False", help="whether use the locality sensitive hashing")
-
-args = parser.parse_args()
 
 
+# =========================================== Set up matrix ================================================
 def process_price(row):
     out = {}
     price = row["price"]
@@ -103,7 +93,7 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1
 
 
-def build_initial_matrix():
+def build_initial_matrix(eco):
     raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
     
     raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
@@ -113,10 +103,12 @@ def build_initial_matrix():
 
     product_reviews = process_review_text(product_reviews)
 
-    if args.ECO == "True":
+    if eco == "True":
         raw_reviews = comb_stock(raw_reviews)
 
     return product_reviews, raw_reviews
+
+# =========================================== Set up matrix ================================================
 
 
 # ==================================== Normal method to find similar items =================================
@@ -131,7 +123,7 @@ def comp_cosine_similarity(user_profiles, X1, col, idx):
 
 
 # Function that takes in product title as input and outputs most similar products
-def find_recommended_products(reviewerID, cosine_sim, product_reviews, threshold=0.1):
+def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend, threshold=0.1):
     products = cosine_sim.loc[reviewerID, :]
     # print(products)
     products_value = products.values
@@ -142,7 +134,7 @@ def find_recommended_products(reviewerID, cosine_sim, product_reviews, threshold
     
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
-    for i in range(min(10, len(sorted_index))):
+    for i in range(min(num_recommend, len(sorted_index))):
         if sorted_product[i] > threshold:
             res_scores.append(sorted_index[i])
 
@@ -156,7 +148,7 @@ def find_recommended_products(reviewerID, cosine_sim, product_reviews, threshold
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_lsh(user_name, FEATURES_NUM, review_text_dict, user_features):
+def find_recommended_products_by_content_lsh(user_name, FEATURES_NUM, review_text_dict, user_features, num_recommend):
     all_product_utilities = {}
     review_text_dict[user_name] = np.array(user_features)
     # print("review_text_dict", review_text_dict, len(review_text_dict.keys()))
@@ -170,33 +162,10 @@ def find_recommended_products_by_lsh(user_name, FEATURES_NUM, review_text_dict, 
         if not key == user_name:
             recommended_product.append(key)
             print(key, sorted_similarity_dict[key])
-            if len(recommended_product) > args.TOP_ITEM:
+            if len(recommended_product) > num_recommend:
                 break
 
     return recommended_product
 # ==================================== LSH method to find similar items ====================================
 
 
-## Review-based filter
-# def content_based_filter(user, eco, LSH):
-def content_based_filter():
-    product_reviews, raw_reviews = build_initial_matrix()
-    review_text_dict, review_text, X1 = review_text_tfidf(product_reviews)
-    user_profiles = build_user_profiles(review_text, product_reviews, raw_reviews)
-    user_profiles_dict = user_profiles.T.to_dict('list')
-    print("=== Reviews based Recommender: ===")
-
-    ECO = args.ECO
-
-    # find k recommended products
-    if args.LSH == "True":
-        recommended_products = find_recommended_products_by_lsh(args.USER, user_profiles.shape[1], review_text_dict, user_profiles_dict[args.USER])
-    else:
-        cosine_sim = comp_cosine_similarity(user_profiles, X1, product_reviews["asin"], raw_reviews["reviewerID"])
-        recommended_products = find_recommended_products(args.USER, cosine_sim, product_reviews, threshold=0.1)
-
-    print(recommended_products)
-    return recommended_products
-
-
-recommended_products = content_based_filter()
