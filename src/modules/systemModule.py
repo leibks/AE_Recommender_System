@@ -80,13 +80,12 @@ class SystemModule:
             if reduce:
                 print("execute reduce")
                 # fetch the users profile and products features firstly
-                self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df)
-                self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
-                self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
-                self.user_profiles_dict = self.user_profiles.T.to_dict('list')
+                self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
+                self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
+                self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
                 self.user_ids, self.product_ids = reduce_matrix(self.user_ids, self.product_ids,
                                                                 self.review_text_dict, self.user_profiles_dict,
-                                                                self.user_profiles.shape[1], algo)
+                                                                self.content_features, algo)
                 print(len(self.user_ids))
                 print(len(self.product_ids))
             # using the selected algorithm
