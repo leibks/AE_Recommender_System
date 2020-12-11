@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -54,7 +53,8 @@ def comb_stock(raw_reviews):
     for idx in raw_reviews.index:
         cat = raw_reviews["main_cat"][idx]
         if not np.isnan(raw_reviews["new_price"][idx]):
-            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 1000
+            new_rate = float(raw_reviews["stockReturn"][idx]) * (
+                        cat_avgprice[cat] - raw_reviews["new_price"][idx]) * 1000
         raw_reviews.loc[idx, "overall"] += new_rate
 
     return raw_reviews
@@ -92,7 +92,7 @@ def build_user_profiles(features, product_reviews, raw_reviews):
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     X1 = vectorizer.fit_transform(product_reviews["reviewText"])
-    review_text = X1.toarray() # shape=(21, 1200)
+    review_text = X1.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
@@ -101,18 +101,14 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1
 
 
-<<<<<<< HEAD
-def build_initial_matrix(eco, file_path):
-    raw_reviews = pd.read_csv(file_path)
-=======
 def build_initial_matrix(eco, raw_reviews):
     # raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
->>>>>>> 55d416251419cda51889f61fd14f637d655c7ad3
-    
+
     raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
-    
+
     # combine same product into one item reviews record
-    product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
+    product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval(
+        "reviewText = reviewText.str.join(' ')")
 
     product_reviews = process_review_text(product_reviews)
 
@@ -120,6 +116,7 @@ def build_initial_matrix(eco, raw_reviews):
         raw_reviews = comb_stock(raw_reviews)
 
     return product_reviews, raw_reviews
+
 
 # =========================================== Set up matrix ================================================
 
@@ -144,7 +141,7 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
     sorted_product = -np.sort(-products_value)
     sorted_index = np.argsort(-products_value)
     # print(sorted_product, sorted_index)
-    
+
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
     for i in range(min(num_recommend, len(sorted_index))):
@@ -153,19 +150,21 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
-        print(product_reviews["asin"][idx], sorted_product[i+1])
+        print(product_reviews["asin"][idx], sorted_product[i + 1])
         recommend_products.append(product_reviews["asin"][idx])
 
     return recommend_products
+
+
 # ==================================== Normal method to find similar items =================================
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_content_lsh(user_name, feature_nums, review_text_dict, user_features, num_recommend):
+def find_recommended_products_by_content_lsh(user_name, FEATURES_NUM, review_text_dict, user_features, num_recommend):
     all_product_utilities = {}
     review_text_dict[user_name] = np.array(user_features)
     # print("review_text_dict", review_text_dict, len(review_text_dict.keys()))
-    lsh_algo = LSH(review_text_dict, feature_nums)
+    lsh_algo = LSH(review_text_dict, FEATURES_NUM)
     similarity_dic = lsh_algo.build_similar_dict(user_name)
     # print("similarity_dic", similarity_dic)
     sorted_similarity_dict = {k: v for k, v in sorted(similarity_dic.items(), key=lambda item: item[1], reverse=True)}
@@ -180,5 +179,3 @@ def find_recommended_products_by_content_lsh(user_name, feature_nums, review_tex
 
     return recommended_product
 # ==================================== LSH method to find similar items ====================================
-
-
