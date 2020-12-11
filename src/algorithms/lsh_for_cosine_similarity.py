@@ -57,7 +57,7 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=5, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=2, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.hash_size = hash_size

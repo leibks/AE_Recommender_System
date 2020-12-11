@@ -140,30 +140,36 @@ class SystemModule:
 
         print(recommended_products)
 
+    # predict the utility of one product to one user by selecting the algorithm
+    def predict_utility(self, user_id, product_id, algo):
 
-m = SystemModule()
-# m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
-# m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
-# m.find_recommended_products("Tazman32", "item", lsh=True)
-# m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=False)
-m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
-# m.find_recommended_products("S. Ortega", "item", lsh=True)
-# windows = platform.system() == 'Windows'
-# if windows:
-#     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
-#     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
-#     # m.find_recommended_products("Tazman32", "item", lsh=True)
-#     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-#     m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-#     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
-#     # m.find_recommended_products("S. Ortega", "item", lsh=True)
-# else:
-#     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "content")
-#     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
-#     # m.find_recommended_products("Tazman32", "item", lsh=True)
-#     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
-#     m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
-#     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
-#     # m.find_recommended_products("S. Ortega", "item", lsh=True)
-#
+        return
+
+
+if __name__ == '__main__':
+    m = SystemModule()
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+    # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+    # m.find_recommended_products("Tazman32", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=False)
+    m.find_recommended_products("A3G5NNV6T6JA8J", "user", lsh=True)
+    # m.find_recommended_products("S. Ortega", "item", lsh=True)
+    # windows = platform.system() == 'Windows'
+    # if windows:
+    #     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+    #     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+    #     # m.find_recommended_products("Tazman32", "item", lsh=True)
+    #     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    #     m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    #     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+    #     # m.find_recommended_products("S. Ortega", "item", lsh=True)
+    # else:
+    #     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "content")
+    #     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+    #     # m.find_recommended_products("Tazman32", "item", lsh=True)
+    #     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+    #     m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+    #     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+    #     # m.find_recommended_products("S. Ortega", "item", lsh=True)
+    #
