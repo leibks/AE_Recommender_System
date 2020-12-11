@@ -13,7 +13,11 @@ def process_price(row):
     price = row["price"]
     if not isinstance(price, float):
         if price[:1] == '$':
-            price = float(price[1:])
+            if "-" in price:
+                prices = price.split(" - ")
+                price = (float(prices[0][1:].replace(",", "")) + float(prices[1][1:].replace(",", ""))) / 2
+            else:
+                price = float(price[1:].replace(",", ""))
         else:
             price = np.NaN
     out["new_price"] = price
