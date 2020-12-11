@@ -3,26 +3,22 @@ import math
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from tqdm import tqdm
+from .lsh_for_cosine_similarity import *
 
 
 def fetch_users_products(df, algo="user"):
+    user_id_list = df["reviewerID"].tolist()
+    product_id_list = df["asin"].tolist()
+    users = set(user_id_list)
+    products = set(product_id_list)
+
+    return users, products
+
+
+def build_dictionary(users, products, algo="user"):
     # if the algo is user-user, dic is the product dictionary
     # if the algo is item-item, dic is the user dictionary
     dic = {}
-
-    user_id_list = df["reviewerID"].tolist()
-    product_id_list = df["asin"].tolist()
-    users = set()
-    products = set()
-
-    for user_id in tqdm(user_id_list, desc="Build User List Loading ...."):
-        if user_id not in users:
-            users.add(user_id)
-
-    for product in tqdm(product_id_list, desc="Build Product List Loading ...."):
-        if product not in products:
-            products.add(product)
-
     # set up related dictionary
     start_index = 0
     if algo == "user":
@@ -33,8 +29,7 @@ def fetch_users_products(df, algo="user"):
         for user in tqdm(users, desc="Build User Dictionary Loading ...."):
             dic[user] = start_index
             start_index += 1
-
-    return [list(users), list(products), dic]
+    return dic
 
 
 # clean up the given format of the price and return the value of the price
@@ -86,3 +81,15 @@ def get_economic_factor(stock_rate, price, rate, high_price, low_price):
         return rate * abs(stock_rate) * 10
     else:
         return 0
+
+
+# reduce the size of the matrix with help of content-based algorithms
+# and locality sensitive hashing for collaborative filtering algorithm
+def reduce_matrix(user_ids, product_ids, review_text_dict, user_profiles_dict, feature_size, algo):
+    if algo == "user":
+        lsh_algo_user = LSH(user_profiles_dict, feature_size, hash_size=6, num_tables=5)
+        user_ids = lsh_algo_user.find_big_clusters_items()
+    elif algo == "item":
+        lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=4, num_tables=5)
+        product_ids = lsh_algo_item.find_big_clusters_items()
+    return user_ids, product_ids

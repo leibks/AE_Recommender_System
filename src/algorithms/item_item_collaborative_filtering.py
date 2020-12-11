@@ -4,7 +4,7 @@ from src.algorithms.utils import (
     get_economic_factor,
     clean_price
 )
-from src.algorithms.lsh_for_cosine_similarity import *
+from .lsh_for_cosine_similarity import *
 
 
 # ==================================== Set up matrix ====================================
@@ -14,7 +14,7 @@ def build_item_matrix(users, products):
     matrix = {}
     for product in products:
         matrix[product] = []
-        for user in users:
+        for i in users:
             matrix[product].append(0)
 
     return matrix
@@ -26,6 +26,8 @@ def build_item_utility_matrix(utility_matrix, df, user_dic, high_price, low_pric
     for index in tqdm(df.index, desc="Build Utility Matrix Loading ...."):
         user_id = df["reviewerID"][index]
         product_id = df["asin"][index]
+        if product_id not in utility_matrix:
+            continue
         rate = df["overall"][index]
         price = clean_price(df["price"][index])
         # if the stock decreased and price of this product was high,
@@ -50,6 +52,8 @@ def build_item_similarity_matrix(similarity_matrix, utility_matrix, user_ids, us
             if rate > 0:
                 sum_rates += rate
                 length += 1
+        if length == 0:
+            continue
         average = sum_rates / length
         for user_id in user_ids:
             if utility_matrix[product_id][user_dic[user_id]] != 0:

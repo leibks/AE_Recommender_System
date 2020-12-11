@@ -93,8 +93,8 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1
 
 
-def build_initial_matrix(eco):
-    raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
+def build_initial_matrix(eco, file_path):
+    raw_reviews = pd.read_csv(file_path)
     
     raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
     
@@ -148,11 +148,11 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_content_lsh(user_name, FEATURES_NUM, review_text_dict, user_features, num_recommend):
+def find_recommended_products_by_content_lsh(user_name, feature_nums, review_text_dict, user_features, num_recommend):
     all_product_utilities = {}
     review_text_dict[user_name] = np.array(user_features)
     # print("review_text_dict", review_text_dict, len(review_text_dict.keys()))
-    lsh_algo = LSH(review_text_dict, FEATURES_NUM)
+    lsh_algo = LSH(review_text_dict, feature_nums)
     similarity_dic = lsh_algo.build_similar_dict(user_name)
     # print("similarity_dic", similarity_dic)
     sorted_similarity_dict = {k: v for k, v in sorted(similarity_dic.items(), key=lambda item: item[1], reverse=True)}
