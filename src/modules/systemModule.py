@@ -42,8 +42,8 @@ class SystemModule:
         # key: product_id, value: a list of feature value calculated by
         # (rate - average rate for this product) (buyers_list)
         self.product_sim_matrix = {}
-        # index: reviewerID, columns: features (words in review text)
-        self.user_profiles = pd.DataFrame()
+        # number of product features
+        self.CONTENT_FEATURES = 0
         # key: product asin, value: features (words in review text)
         self.review_text_dict = {}
         # key: reviewerID, value: features (words in review text)
@@ -55,30 +55,30 @@ class SystemModule:
 
     def set_up_matrix(self, file_path, algo, eco=True):
         df = pd.read_csv(file_path)
-        fetch_res = fetch_users_products(df, algo)
-        identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
-        high_value = identify_res[0]
-        low_value = identify_res[1]
-        users = fetch_res[0]
-        product_ids = fetch_res[1]
-        if algo == "user":
-            self.product_dict = fetch_res[2]
-            self.user_utility_matrix = build_user_matrix(users, product_ids)
-            self.user_sim_matrix = build_user_matrix(users, product_ids)
-            build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, high_value, low_value, eco)
-            build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, product_ids, self.product_dict)
-        elif algo == "item":
-            self.user_dict = fetch_res[2]
-            self.product_utility_matrix = build_item_matrix(users, product_ids)
-            self.product_sim_matrix = build_item_matrix(users, product_ids)
-            print("Build the initial matrix")
-            build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
-            build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
-        elif algo == "content":
+        if algo == "content":
             self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df)
             self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
-            self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
-            self.user_profiles_dict = self.user_profiles.T.to_dict('list')
+            self.user_profiles_dict, self.CONTENT_FEATURES = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+        else:
+            fetch_res = fetch_users_products(df, algo)
+            identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
+            high_value = identify_res[0]
+            low_value = identify_res[1]
+            users = fetch_res[0]
+            product_ids = fetch_res[1]
+            if algo == "user":
+                self.product_dict = fetch_res[2]
+                self.user_utility_matrix = build_user_matrix(users, product_ids)
+                self.user_sim_matrix = build_user_matrix(users, product_ids)
+                build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, high_value, low_value, eco)
+                build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, product_ids, self.product_dict)
+            elif algo == "item":
+                self.user_dict = fetch_res[2]
+                self.product_utility_matrix = build_item_matrix(users, product_ids)
+                self.product_sim_matrix = build_item_matrix(users, product_ids)
+                print("Build the initial matrix")
+                build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
+                build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
@@ -100,7 +100,7 @@ class SystemModule:
         elif algo == "content":
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
-                    user_id, self.user_profiles.shape[1], self.review_text_dict,
+                    user_id, self.CONTENT_FEATURES, self.review_text_dict,
                     self.user_profiles_dict[user_id], self.num_recommend)
             else:
                 cosine_sim = comp_cosine_similarity(self.user_profiles, self.tfidf_review,
@@ -118,8 +118,10 @@ if windows:
     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
     # m.find_recommended_products("Tazman32", "item", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-    m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-    m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content")
+    # m.find_recommended_products("A3Z74TDRGD0HU", "content", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
+    m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
     # m.find_recommended_products("S. Ortega", "item", lsh=True)
 else:
     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "content")
