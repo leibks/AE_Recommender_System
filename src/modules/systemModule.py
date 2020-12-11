@@ -97,7 +97,6 @@ class SystemModule:
             self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
             self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
-            print(self.product_utility_matrix)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
                                          self.user_ids, self.user_dict)
         elif algo == "content":
@@ -141,9 +140,38 @@ class SystemModule:
         print(recommended_products)
 
     # predict the utility of one product to one user by selecting the algorithm
+    # before calling the function, we have to call the set up function and input the same algorithm
     def predict_utility(self, user_id, product_id, algo):
+        if algo == "user":
+            lsh_algo = LSH(self.user_sim_matrix, len(self.product_ids))
+            similarity_dic = lsh_algo.build_similar_dict(user_id)
+            sum_weights = 0
+            sum_similarity = 0
+            for sim_user in similarity_dic.keys():
+                sim_val = similarity_dic[sim_user]
+                utility = self.user_utility_matrix[sim_user][product_id]
+                sum_weights += sim_val * utility
+                sum_similarity += sim_val
+            if sum_similarity == 0:
+                return 0
+            else:
+                return sum_weights / sum_similarity
+        elif algo == "item":
+            lsh_algo = LSH(self.product_sim_matrix, len(self.user_ids))
+            similarity_dic = lsh_algo.build_similar_dict(product_id)
+            sum_weights = 0
+            sum_similarity = 0
+            for sim_item in similarity_dic.keys():
+                sim_val = similarity_dic[sim_item]
+                utility = self.product_utility_matrix[sim_item][user_id]
+                sum_weights += sim_val * utility
+                sum_similarity += sim_val
 
-        return
+            if sum_similarity == 0:
+                return 0
+            else:
+                return sum_weights / sum_similarity
+        return 0
 
 
 if __name__ == '__main__':
@@ -152,8 +180,15 @@ if __name__ == '__main__':
     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
     # m.find_recommended_products("Tazman32", "item", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-    m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=False)
-    m.find_recommended_products("A3G5NNV6T6JA8J", "user", lsh=True)
+
+    m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
+    print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
+    # m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=False)
+
+    # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
+    # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
+    # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "item"))
+
     # m.find_recommended_products("S. Ortega", "item", lsh=True)
     # windows = platform.system() == 'Windows'
     # if windows:
