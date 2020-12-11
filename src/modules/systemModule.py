@@ -80,7 +80,7 @@ class SystemModule:
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix, users, self.user_dict)
         elif algo == "content":
-            self.product_reviews, self.raw_reviews = build_initial_matrix(eco)
+            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df)
             self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
             self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
             self.user_profiles_dict = self.user_profiles.T.to_dict('list')
