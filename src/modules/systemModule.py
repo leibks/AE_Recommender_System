@@ -4,6 +4,7 @@ from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
 
 import argparse
+import platform
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -111,10 +112,21 @@ class SystemModule:
 
 
 m = SystemModule()
-# m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
-# m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
-# m.find_recommended_products("Tazman32", "item", lsh=True)
-m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
-# m.find_recommended_products("S. Ortega", "item", lsh=True)
+windows = platform.system() == 'Windows'
+if windows:
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+    # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+    # m.find_recommended_products("Tazman32", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+    # m.find_recommended_products("S. Ortega", "item", lsh=True)
+else:
+    # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "content")
+    # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+    # m.find_recommended_products("Tazman32", "item", lsh=True)
+    # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+    m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+    m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+    # m.find_recommended_products("S. Ortega", "item", lsh=True)
 
