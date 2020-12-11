@@ -29,11 +29,11 @@ def build_item_utility_matrix(utility_matrix, df, user_dic, high_price, low_pric
         if product_id not in utility_matrix:
             continue
         rate = df["overall"][index]
-        price = clean_price(df["price"][index])
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
         if consider_economic:
+            price = clean_price(df["price"][index])
             stock_rate = df["stockReturn"][index]
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:

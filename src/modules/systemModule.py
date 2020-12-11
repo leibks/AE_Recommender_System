@@ -65,9 +65,12 @@ class SystemModule:
     def set_up_matrix(self, file_path, algo, reduce=False, eco=True):
         df = pd.read_csv(file_path)
         fetch_res = fetch_users_products(df, algo)
-        identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
-        high_value = identify_res[0]
-        low_value = identify_res[1]
+        high_value = 0
+        low_value = 0
+        if eco:
+            identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
+            high_value = identify_res[0]
+            low_value = identify_res[1]
         self.user_ids = fetch_res[0]
         self.product_ids = fetch_res[1]
         print(len(self.user_ids))
@@ -181,13 +184,17 @@ if __name__ == '__main__':
     # m.find_recommended_products("Tazman32", "item", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
 
-    m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
-    print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
-    # m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=False)
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
+    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
+    # # m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=False)
 
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
     # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "item"))
+
+    m.set_up_matrix("resource/original_data/ratings_Electronics.csv", "user", reduce=False, eco=False)
+    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
+    m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
 
     # m.find_recommended_products("S. Ortega", "item", lsh=True)
     # windows = platform.system() == 'Windows'
