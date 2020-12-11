@@ -185,11 +185,14 @@ if __name__ == '__main__':
 
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
     # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
-    # m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=False)
 
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
     # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "item"))
+
+    m.set_up_matrix("resource/original_data/ratings_Electronics.csv", "user", reduce=False, eco=False)
+    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
+    m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
 
     # m.find_recommended_products("S. Ortega", "item", lsh=True)
     # windows = platform.system() == 'Windows'
