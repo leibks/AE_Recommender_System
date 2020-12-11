@@ -1,4 +1,4 @@
-from tqdm import *
+
 
 from src.algorithms.utils import (
     get_economic_factor,

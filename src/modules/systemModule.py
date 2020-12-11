@@ -1,15 +1,15 @@
 import argparse
 import platform
 import os
-path = os.getcwd()
-print("Current working path:", path)
 import sys
-sys.path.append(path)
 from src.algorithms.user_user_collaborative_filtering import *
 from src.algorithms.item_item_collaborative_filtering import *
 from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
+path = os.getcwd()
+sys.path.append(path)
 
+print("Current working path:", path)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -20,6 +20,7 @@ parser.add_argument("--ECO", type=str, default="True", help="consider economic f
 parser.add_argument("--LSH", type=str, default="True", help="whether use the locality sensitive hashing")
 
 args = parser.parse_args()
+
 
 # Recommender System Module: build required matrix based on dataset and
 # select different algorithms to find the recommended products by giving
@@ -145,7 +146,7 @@ m = SystemModule()
 # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
 # m.find_recommended_products("Tazman32", "item", lsh=True)
 # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
-m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=False)
 m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
 # m.find_recommended_products("S. Ortega", "item", lsh=True)
 # windows = platform.system() == 'Windows'
