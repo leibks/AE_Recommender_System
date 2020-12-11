@@ -48,7 +48,7 @@ class SystemModule:
         # (rate - average rate for this product) (buyers_list)
         self.product_sim_matrix = {}
         # number of product features
-        self.CONTENT_FEATURES = 0
+        self.content_features = 0
         # key: product asin, value: features (words in review text)
         self.review_text_dict = {}
         # key: reviewerID, value: features (words in review text)
@@ -69,8 +69,8 @@ class SystemModule:
         low_value = identify_res[1]
         if algo == "content":
             self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-            self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
-            self.user_profiles_dict, self.CONTENT_FEATURES = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+            self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
+            self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
         else:
             fetch_res = fetch_users_products(df, algo)
             self.user_ids = fetch_res[0]
@@ -129,7 +129,7 @@ class SystemModule:
         elif algo == "content":
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
-                    user_id, self.CONTENT_FEATURES, self.review_text_dict,
+                    user_id, self.content_features, self.review_text_dict,
                     self.user_profiles_dict[user_id], self.num_recommend)
             else:
                 cosine_sim = comp_cosine_similarity(self.user_profiles, self.tfidf_review,
@@ -179,7 +179,7 @@ if __name__ == '__main__':
     m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
     m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content")
-    # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
+    # m.find_recommended_products("AMPDBHNK02WIY", "content", lsh=True)
     # m.find_recommended_products("Tazman32", "item", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
 

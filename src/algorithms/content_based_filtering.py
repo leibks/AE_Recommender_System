@@ -37,7 +37,7 @@ def comb_stock(raw_reviews, high_price, low_price):
     #     cat_avgprice[price_temp["main_cat"][i]] = price_temp["price"][i]
 
     for idx in tqdm(raw_reviews.index, desc="Combine Stock Loading ...."):
-        price = raw_reviews["price"][idx]
+        price = clean_price(raw_reviews["price"][idx])
         stock_rate = raw_reviews["stockReturn"][idx]
         rate = raw_reviews["overall"][idx]
         economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
@@ -63,19 +63,21 @@ def build_user_profiles(features, product_reviews, raw_reviews):
     for i in range(len(temp)):
         user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
 
-    user_matrix = []
+    # user_matrix = []
+    user_profiles_dict = {}
     for idx in tqdm(raw_reviews.index, desc="Build User Profiles Loading ...."):
         user = raw_reviews["reviewerID"][idx]
         asin = raw_reviews["asin"][idx]
         product_idx = product_indices[asin]
         # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
         score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
-        user_matrix.append(features[product_indices[asin]] * score_weight)
+        user_profiles_dict[raw_reviews["reviewerID"][idx]] = (features[product_indices[asin]] * score_weight).tolist()
+        # user_matrix.append(features[product_indices[asin]] * score_weight)
 
-    user_profiles_dict = {}
-    for i in tqdm(range(len(user_matrix)), desc="Build User Profile Dict Loading ...."):
-        user_profiles_dict[raw_reviews["reviewerID"][i]] = user_matrix[i].tolist()
-    return user_profiles_dict, len(user_matrix[0])
+    # user_profiles_dict = {}
+    # for i in tqdm(range(len(user_matrix)), desc="Build User Profile Dict Loading ...."):
+    #     user_profiles_dict[raw_reviews["reviewerID"][i]] = user_matrix[i].tolist()
+    return user_profiles_dict
 
 
 def review_text_tfidf(product_reviews):
@@ -87,7 +89,7 @@ def review_text_tfidf(product_reviews):
     for i in range(len(review_text)):
         review_text_dict[product_reviews["asin"][i]] = review_text[i]
     # print(X1.shape)  # (21, 1200)
-    return review_text_dict, review_text, X1
+    return review_text_dict, review_text, X1, X1.shape[1]
 
 
 ## combine same data into one column
@@ -114,8 +116,8 @@ def process_review_text(product_reviews):
 def build_initial_matrix(eco, raw_reviews, high_value, low_value):
     # raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
     
-    for idx in tqdm(raw_reviews.index, desc="Clean Price Loading ...."):
-        raw_reviews.loc[idx, "price"] = process_price(raw_reviews["price"][idx])
+    # for idx in tqdm(raw_reviews.index, desc="Clean Price Loading ...."):
+    #     raw_reviews.loc[idx, "price"] = process_price(raw_reviews["price"][idx])
 
     # for idx in tqdm(raw_reviews.index, desc="Build Initial Matrix Loading ...."):
     #     price = process_price(raw_reviews["price"][idx])
