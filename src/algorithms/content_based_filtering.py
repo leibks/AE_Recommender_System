@@ -1,4 +1,3 @@
-
 import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -82,7 +81,7 @@ def build_user_profiles(features, product_reviews, raw_reviews):
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     X1 = vectorizer.fit_transform(product_reviews["reviewText"])
-    review_text = X1.toarray() # shape=(21, 1200)
+    review_text = X1.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
@@ -100,7 +99,8 @@ def build_initial_matrix(eco, raw_reviews):
     # raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
     
     # combine same product into one item reviews record
-    product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval("reviewText = reviewText.str.join(' ')")
+    product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval(
+        "reviewText = reviewText.str.join(' ')")
 
     product_reviews = process_review_text(product_reviews)
 
@@ -108,6 +108,7 @@ def build_initial_matrix(eco, raw_reviews):
         raw_reviews = comb_stock(raw_reviews)
 
     return product_reviews, raw_reviews
+
 
 # =========================================== Set up matrix ================================================
 
@@ -132,7 +133,7 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
     sorted_product = -np.sort(-products_value)
     sorted_index = np.argsort(-products_value)
     # print(sorted_product, sorted_index)
-    
+
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
     for i in range(min(num_recommend, len(sorted_index))):
@@ -141,10 +142,12 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
-        print(product_reviews["asin"][idx], sorted_product[i+1])
+        print(product_reviews["asin"][idx], sorted_product[i + 1])
         recommend_products.append(product_reviews["asin"][idx])
 
     return recommend_products
+
+
 # ==================================== Normal method to find similar items =================================
 
 
@@ -168,5 +171,3 @@ def find_recommended_products_by_content_lsh(user_name, FEATURES_NUM, review_tex
 
     return recommended_product
 # ==================================== LSH method to find similar items ====================================
-
-
