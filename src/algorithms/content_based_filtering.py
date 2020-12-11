@@ -5,47 +5,48 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
-
 from src.algorithms.utils import (
+    get_economic_factor,
     clean_price
 )
 
-
 # =========================================== Set up matrix ================================================
-## combine same data into one column
-## stem data e.g. (videos -> video)
-## clean data; convert all data to lower case and strip names of spaces
-def process_review_text(product_reviews):
-    # stem data e.g. (videos -> video)
-    sno = nltk.stem.SnowballStemmer('english')
+def process_price(price):
+    if not isinstance(price, float):
+        if price[:1] == '$':
+            if "-" in price:
+                prices = price.split(" - ")
+                price = (float(prices[0][1:].replace(",", "")) + float(prices[1][1:].replace(",", ""))) / 2
+            else:
+                price = float(price[1:].replace(",", ""))
+        else:
+            price = np.NaN
+    return price
 
-    for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process review text ...."):
-    # for i in range(len(product_reviews["reviewText"])):
-        sen = []
-        review = product_reviews["reviewText"][i]
-        # print("reviewText", product_reviews["reviewText"][i])
-        if not pd.isnull(review):
-            words = review.split()
-            for w in words:
-                sen.append(sno.stem(w))
-        product_reviews["reviewText"][i] = ' '.join(sen)
 
-    return product_reviews
 
 
 # combine stock market data with reviews to do recommendation
-def comb_stock(raw_reviews):
-    price_temp = raw_reviews.groupby("main_cat", as_index=False).mean()
-    cat_avgprice = {}
-    for i in range(len(price_temp)):
-        cat_avgprice[price_temp["main_cat"][i]] = price_temp["price"][i]
+def comb_stock(raw_reviews, high_price, low_price):
+    # print("raw_reviews", raw_reviews)
+    # economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
+    # price_temp = raw_reviews.groupby("main_cat", as_index=False).mean()
+    # print("price_temp", price_temp)
+    # cat_avgprice = {}
+    # for i in range(len(price_temp)):
+    #     cat_avgprice[price_temp["main_cat"][i]] = price_temp["price"][i]
 
     for idx in tqdm(raw_reviews.index, desc="Combine Stock Loading ...."):
-    # for idx in raw_reviews.index:
-        cat = raw_reviews["main_cat"][idx]
-        if not np.isnan(raw_reviews["price"][idx]):
-            new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["price"][idx]) * 1000
-        raw_reviews.loc[idx, "overall"] += new_rate
+        price = raw_reviews["price"][idx]
+        stock_rate = raw_reviews["stockReturn"][idx]
+        rate = raw_reviews["overall"][idx]
+        economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
+        raw_reviews.loc[idx, "overall"] += economic_factor
+        
+        # cat = raw_reviews["main_cat"][idx]
+        # if not np.isnan(raw_reviews["price"][idx]):
+        #     new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["price"][idx]) * 1000
+        # raw_reviews.loc[idx, "overall"] += new_rate
 
     return raw_reviews
 
@@ -64,7 +65,6 @@ def build_user_profiles(features, product_reviews, raw_reviews):
 
     user_matrix = []
     for idx in tqdm(raw_reviews.index, desc="Build User Profiles Loading ...."):
-    # for idx in raw_reviews.index:
         user = raw_reviews["reviewerID"][idx]
         asin = raw_reviews["asin"][idx]
         product_idx = product_indices[asin]
@@ -90,13 +90,38 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1
 
 
-def build_initial_matrix(eco, raw_reviews):
+## combine same data into one column
+## stem data e.g. (videos -> video)
+## clean data; convert all data to lower case and strip names of spaces
+def process_review_text(product_reviews):
+    # stem data e.g. (videos -> video)
+    sno = nltk.stem.SnowballStemmer('english')
+
+    for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
+    # for i in range(len(product_reviews["reviewText"])):
+        sen = []
+        review = product_reviews["reviewText"][i]
+        # print("reviewText", product_reviews["reviewText"][i])
+        if not pd.isnull(review):
+            words = review.split()
+            for w in words:
+                sen.append(sno.stem(w))
+        product_reviews["reviewText"][i] = ' '.join(sen)
+
+    return product_reviews
+
+
+def build_initial_matrix(eco, raw_reviews, high_value, low_value):
     # raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
     
     for idx in tqdm(raw_reviews.index, desc="Clean Price Loading ...."):
-        raw_reviews.loc[idx, "price"] = clean_price(raw_reviews["price"][idx])
+        raw_reviews.loc[idx, "price"] = process_price(raw_reviews["price"][idx])
 
-    # raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
+    # for idx in tqdm(raw_reviews.index, desc="Build Initial Matrix Loading ...."):
+    #     price = process_price(raw_reviews["price"][idx])
+    #     if eco == True:
+    #         raw_reviews = comb_stock(raw_reviews, high_value, low_value)
+
     
     # combine same product into one item reviews record
     product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval(
@@ -105,7 +130,7 @@ def build_initial_matrix(eco, raw_reviews):
     product_reviews = process_review_text(product_reviews)
 
     if eco == True:
-        raw_reviews = comb_stock(raw_reviews)
+        raw_reviews = comb_stock(raw_reviews, high_value, low_value)
 
     return product_reviews, raw_reviews
 
