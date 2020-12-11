@@ -13,7 +13,11 @@ def process_price(row):
     price = row["price"]
     if not isinstance(price, float):
         if price[:1] == '$':
-            price = float(price[1:])
+            if "-" in price:
+                prices = price.split(" - ")
+                price = (float(prices[0][1:].replace(",", "")) + float(prices[1][1:].replace(",", ""))) / 2
+            else:
+                price = float(price[1:].replace(",", ""))
         else:
             price = np.NaN
     out["new_price"] = price
@@ -29,9 +33,12 @@ def process_review_text(product_reviews):
 
     for i in range(len(product_reviews["reviewText"])):
         sen = []
-        words = product_reviews["reviewText"][i].split()
-        for w in words:
-            sen.append(sno.stem(w))
+        review = product_reviews["reviewText"][i]
+        # print("reviewText", product_reviews["reviewText"][i])
+        if not pd.isnull(review):
+            words = review.split()
+            for w in words:
+                sen.append(sno.stem(w))
         product_reviews["reviewText"][i] = ' '.join(sen)
 
     return product_reviews
@@ -59,10 +66,11 @@ def build_user_profiles(features, product_reviews, raw_reviews):
     product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
 
     # compute the average scores that users give products they bought
-    temp = raw_reviews.groupby("reviewerID", as_index=False).agg(np.array)
+    temp = raw_reviews.groupby("reviewerID", as_index=False).mean()
+    # print("temp", temp)
     user_avgscore = {}
     for i in range(len(temp)):
-        user_avgscore[temp["reviewerID"][i]] = temp["overall"][i].mean()
+        user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
 
     user_matrix = []
     for idx in raw_reviews.index:
@@ -70,11 +78,11 @@ def build_user_profiles(features, product_reviews, raw_reviews):
         asin = raw_reviews["asin"][idx]
         product_idx = product_indices[asin]
         # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
-        score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0 
+        score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
         user_matrix.append(features[product_indices[asin]] * score_weight)
 
     user_matrix = pd.DataFrame(user_matrix)
-    user_matrix['reviewerID'] = raw_reviews["reviewerID"] 
+    user_matrix['reviewerID'] = raw_reviews["reviewerID"]
     # size of user_matrix = user number * number of review words
 
     user_profile = user_matrix.groupby("reviewerID").mean()
@@ -93,8 +101,13 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1
 
 
+<<<<<<< HEAD
 def build_initial_matrix(eco, file_path):
     raw_reviews = pd.read_csv(file_path)
+=======
+def build_initial_matrix(eco, raw_reviews):
+    # raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
+>>>>>>> 55d416251419cda51889f61fd14f637d655c7ad3
     
     raw_reviews['new_price'] = raw_reviews.apply(process_price, axis=1)
     

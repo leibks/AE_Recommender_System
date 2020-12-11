@@ -1,8 +1,15 @@
 import argparse
-from src.algorithms.content_based_filtering import *
-from src.algorithms.item_item_collaborative_filtering import *
+import platform
+import os
+path = os.getcwd()
+print("Current working path:", path)
+import sys
+sys.path.append(path)
 from src.algorithms.user_user_collaborative_filtering import *
+from src.algorithms.item_item_collaborative_filtering import *
+from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -13,7 +20,6 @@ parser.add_argument("--ECO", type=str, default="True", help="consider economic f
 parser.add_argument("--LSH", type=str, default="True", help="whether use the locality sensitive hashing")
 
 args = parser.parse_args()
-
 
 # Recommender System Module: build required matrix based on dataset and
 # select different algorithms to find the recommended products by giving
@@ -55,7 +61,7 @@ class SystemModule:
 
     # reduce: determine if reduce the size of the matrix with
     # help of content-based algorithms for collaborative filtering algorithm
-    def set_up_matrix(self, file_path, algo, reduce, eco=True):
+    def set_up_matrix(self, file_path, algo, reduce=False, eco=True):
         df = pd.read_csv(file_path)
         fetch_res = fetch_users_products(df, algo)
         identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
@@ -68,7 +74,7 @@ class SystemModule:
         if reduce:
             print("execute reduce")
             # fetch the users profile and products features firstly
-            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, file_path)
+            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df)
             self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
             self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
             self.user_profiles_dict = self.user_profiles.T.to_dict('list')
@@ -94,7 +100,7 @@ class SystemModule:
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
                                          self.user_ids, self.user_dict)
         elif algo == "content":
-            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, file_path)
+            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df)
             self.review_text_dict, review_text, self.tfidf_review = review_text_tfidf(self.product_reviews)
             self.user_profiles = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
             self.user_profiles_dict = self.user_profiles.T.to_dict('list')
@@ -134,14 +140,29 @@ class SystemModule:
         print(recommended_products)
 
 
-if __name__ == '__main__':
-    m = SystemModule()
-    # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=True)
-    # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
-    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
-    # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
-    # m.find_recommended_products("Tazman32", "item", lsh=True)
-    m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=False)
-    m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
-    # m.find_recommended_products("S. Ortega", "item", lsh=True)
-
+m = SystemModule()
+# m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+# m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+# m.find_recommended_products("Tazman32", "item", lsh=True)
+# m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+# m.find_recommended_products("S. Ortega", "item", lsh=True)
+# windows = platform.system() == 'Windows'
+# if windows:
+#     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+#     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+#     # m.find_recommended_products("Tazman32", "item", lsh=True)
+#     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+#     m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+#     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+#     # m.find_recommended_products("S. Ortega", "item", lsh=True)
+# else:
+#     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "content")
+#     # m.find_recommended_products("A3G5NNV6T6JA8J", "content", lsh=True)
+#     # m.find_recommended_products("Tazman32", "item", lsh=True)
+#     # m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+#     m.set_up_matrix("../../resource/cleaned_data/beauty.csv", "user")
+#     m.find_recommended_products("A3Z74TDRGD0HU", "user", lsh=True)
+#     # m.find_recommended_products("S. Ortega", "item", lsh=True)
+#

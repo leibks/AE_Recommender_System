@@ -1,1 +1,4 @@
 .idea/
+src/__pycache__/
+src/algorithms/__pycache__/
+src/modules/__pycache__
