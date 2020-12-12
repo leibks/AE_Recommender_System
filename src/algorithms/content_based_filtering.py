@@ -3,6 +3,8 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
 from src.algorithms.utils import (
@@ -65,15 +67,18 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
 
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
-    X1 = vectorizer.fit_transform(product_reviews["reviewText"])
+    tfidf_review = vectorizer.fit_transform(product_reviews["reviewText"])
     
-    review_text = X1.toarray()  # shape=(21, 1200)
+    review_text = tfidf_review.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
         review_text_dict[product_reviews["asin"][i]] = review_text[i]
-    # print(X1.shape)  # (21, 1200)
-    return review_text_dict, review_text, X1, X1.shape[1]
+    # print(tfidf_review.shape)  # (21, 1200)
+    print("review_text_dict", review_text_dict)
+    print("review_text", review_text)
+    print("tfidf_review", tfidf_review)
+    return review_text_dict, review_text, tfidf_review, tfidf_review.shape[1]
 
 
 ## combine same data into one column
@@ -83,6 +88,7 @@ def process_review_text(product_reviews):
     # stem data e.g. (videos -> video)
     sno = nltk.stem.SnowballStemmer('english')
 
+    en_stops = set(stopwords.words('english'))
     for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
     # for i in range(len(product_reviews["reviewText"])):
         sen = []
@@ -91,7 +97,8 @@ def process_review_text(product_reviews):
         if not pd.isnull(review):
             words = review.split()
             for w in words:
-                sen.append(sno.stem(w))
+                if w not in en_stops:
+                    sen.append(sno.stem(w))
         product_reviews["reviewText"][i] = ' '.join(sen)
 
     return product_reviews
@@ -125,7 +132,7 @@ def comp_cosine_similarity(user_profiles, X1, col, idx):
 
 
 # Function that takes in product title as input and outputs most similar products
-def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend, threshold=0.1):
+def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend):
     products = cosine_sim.loc[reviewerID, :]
     # print(products)
     products_value = products.values
@@ -137,8 +144,7 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
     for i in range(min(num_recommend, len(sorted_index))):
-        if sorted_product[i] > threshold:
-            res_scores.append(sorted_index[i])
+        res_scores.append(sorted_index[i])
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
