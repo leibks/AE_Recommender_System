@@ -3,13 +3,10 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
-<<<<<<< HEAD
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
-=======
->>>>>>> 289452a1991074e83a7b713c3b147ea2af60f8a1
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
 from src.algorithms.utils import (
@@ -75,13 +72,8 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_review = vectorizer.fit_transform(product_reviews["reviewText"])
-<<<<<<< HEAD
     
     review_text = tfidf_review.toarray()  # shape=(product number, feature number)
-=======
-
-    review_text = tfidf_review.toarray()  # shape=(21, 1200)
->>>>>>> 289452a1991074e83a7b713c3b147ea2af60f8a1
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
