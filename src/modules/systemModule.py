@@ -33,9 +33,9 @@ class SystemModule:
         self.num_recommend = num_recommend
         self.high_rate = high_rate
         self.low_rate = low_rate
-        # key: user_id, value: index in each product's buyers_list
+        # key: user_id, value: user index in the matrix
         self.user_dict = {}
-        # key: product_id, value: index in each user's product_list
+        # key: product_id, value: product index in the matrix
         self.product_dict = {}
         # key: user_id, value: a list of utilities (preference) to every product (product_list)
         self.user_utility_matrix = {}
@@ -59,10 +59,12 @@ class SystemModule:
         self.user_ids = set()
         self.product_ids = set()
         self.lsh = None
+        # key: user id, a list of rated product ids
+        self.rated_products = {}
 
     # reduce: determine if reduce the size of the matrix with
     # help of content-based algorithms for collaborative filtering algorithm
-    def set_up_matrix(self, file_path, algo, reduce=False, eco=True, user_id=""):
+    def set_up_matrix(self, file_path, algo, reduce=False, eco=True, hash_size=5, num_tables=3):
         df = pd.read_csv(file_path)
         high_value = 0
         low_value = 0
@@ -70,43 +72,46 @@ class SystemModule:
             identify_res = identify_price_in_items(df["price"].tolist(), self.high_rate, self.low_rate)
             high_value = identify_res[0]
             low_value = identify_res[1]
-        if algo == "content":
-            self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-            self.review_text_dict, self.review_text, self.tfidf_review, self.content_feature_size = review_text_tfidf(
-                self.product_reviews)
-        else:
-            fetch_res = fetch_users_products(df)
-            self.user_ids = fetch_res[0]
-            self.product_ids = fetch_res[1]
-            print(len(self.user_ids))
-            print(len(self.product_ids))
-            if reduce:
-                print("execute reduce")
-                # fetch the users profile and products features firstly
-                self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-                self.review_text_dict, self.review_text, self.tfidf_review, self.content_feature_size = \
-                    review_text_tfidf(self.product_reviews)
-                self.product_ids = reduce_matrix(self.review_text_dict, self.content_feature_size)
-                print(len(self.user_ids))
-                print(len(self.product_ids))
-            # using the selected algorithm
-            if algo == "user":
-                self.product_dict = build_dictionary(self.user_ids, self.product_ids, algo)
-                self.user_utility_matrix = build_user_matrix(self.user_ids, self.product_ids)
-                self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
-                build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, high_value, low_value, eco)
-                build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix,
-                                             self.product_ids, self.product_dict)
-                self.lsh = LSH(self.user_sim_matrix, len(self.product_dict), hash_size=300, num_tables=2)
-            elif algo == "item":
-                self.user_dict = build_dictionary(self.user_ids, self.product_ids, algo)
-                self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
-                self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
-                build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, high_value, low_value, eco)
-                build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
-                                             self.user_ids, self.user_dict)
-                self.lsh = LSH(self.product_sim_matrix, len(self.user_dict), hash_size=30, num_tables=2)
-                # print(self.product_sim_matrix)
+        # fetch the features of the products (for three algorithms)
+        self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
+        self.review_text_dict, self.review_text, self.tfidf_review, self.content_feature_size = review_text_tfidf(
+            self.product_reviews)
+        # fetch users and products
+        fetch_res = fetch_users_products(df)
+        self.user_ids = fetch_res[0]
+        self.product_ids = fetch_res[1]
+        print(f"number of users: {len(self.user_ids)}")
+        print(f"number of products: {len(self.product_ids)}")
+        # if reduce:
+        #     print("execute reduce")
+        #     self.product_ids = reduce_matrix(self.review_text_dict, self.content_feature_size)
+        #     print(f"reduced number of products: {len(self.product_ids)}")
+        dict_res = build_dictionary(self.user_ids, self.product_ids)
+        self.user_dict = dict_res[0]
+        self.product_dict = dict_res[1]
+
+        if algo == "user":
+            self.user_utility_matrix = build_user_matrix(self.user_ids, self.product_ids)
+            self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
+            build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, self.rated_products,
+                                      high_value, low_value, eco)
+            fill_estimated_rates(self.review_text_dict, self.content_feature_size,
+                                 self.rated_products, self.user_utility_matrix, self.product_dict, self.user_dict, algo)
+            build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, self.rated_products,
+                                         self.product_dict)
+            # print(self.user_utility_matrix)
+            self.lsh = LSH(self.user_sim_matrix, len(self.product_ids), hash_size=hash_size, num_tables=num_tables)
+        elif algo == "item":
+            self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
+            self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
+            build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, self.rated_products,
+                                      high_value, low_value, eco)
+            fill_estimated_rates(self.review_text_dict, self.content_feature_size,
+                                 self.rated_products, self.product_utility_matrix, self.product_dict, self.user_dict, algo)
+            build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
+                                         self.user_ids, self.user_dict)
+            self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)
+            print(self.product_utility_matrix)
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
@@ -202,22 +207,18 @@ if __name__ == '__main__':
     #     print(i, m.predict_utility(v[0], v[1], "item"))
     #Test['Predict'] = user_predict
 
-    m.set_up_matrix("resource/cleaned_data/fashion.csv", "item", reduce=True)
-    m.find_recommended_products("A1UVZHFDTI4FPK", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
+    # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "user", reduce=True)
-    # m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", hash_size=3, num_tables=5, eco=True)
+    m.find_recommended_products("A2HOI48JK8838M", "user", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
-    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
+    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", hash_size=10, num_tables=3)
+    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
 
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "user"))
     # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
-
-    # m.set_up_matrix("resource/original_data/ratings_Electronics.csv", "user", reduce=False, eco=False)
-    # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
-    # m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
 
     # m.set_up_matrix("resource/original_data/highly_filled_electronic_data.csv", "user", reduce=False, eco=False)
     # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))

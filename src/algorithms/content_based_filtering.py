@@ -10,6 +10,7 @@ from src.algorithms.utils import (
     clean_price
 )
 
+
 # =========================================== Set up matrix ================================================
 def process_price(price):
     if not isinstance(price, float):
@@ -22,8 +23,6 @@ def process_price(price):
         else:
             price = np.NaN
     return price
-
-
 
 
 # combine stock market data with reviews to do recommendation
@@ -92,15 +91,15 @@ def review_text_tfidf(product_reviews):
     return review_text_dict, review_text, X1, X1.shape[1]
 
 
-## combine same data into one column
-## stem data e.g. (videos -> video)
-## clean data; convert all data to lower case and strip names of spaces
+# combine same data into one column
+# stem data e.g. (videos -> video)
+# clean data; convert all data to lower case and strip names of spaces
 def process_review_text(product_reviews):
     # stem data e.g. (videos -> video)
     sno = nltk.stem.SnowballStemmer('english')
 
     for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
-    # for i in range(len(product_reviews["reviewText"])):
+        # for i in range(len(product_reviews["reviewText"])):
         sen = []
         review = product_reviews["reviewText"][i]
         # print("reviewText", product_reviews["reviewText"][i])
@@ -124,14 +123,13 @@ def build_initial_matrix(eco, raw_reviews, high_value, low_value):
     #     if eco == True:
     #         raw_reviews = comb_stock(raw_reviews, high_value, low_value)
 
-    
     # combine same product into one item reviews record
     product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval(
         "reviewText = reviewText.str.join(' ')")
 
     product_reviews = process_review_text(product_reviews)
 
-    if eco == True:
+    if eco:
         raw_reviews = comb_stock(raw_reviews, high_value, low_value)
 
     return product_reviews, raw_reviews

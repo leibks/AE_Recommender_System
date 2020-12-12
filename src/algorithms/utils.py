@@ -15,21 +15,21 @@ def fetch_users_products(df):
     return users, products
 
 
-def build_dictionary(users, products, algo="user"):
+def build_dictionary(users, products):
     # if the algo is user-user, dic is the product dictionary
     # if the algo is item-item, dic is the user dictionary
-    dic = {}
+    user_dic = {}
+    product_dic = {}
     # set up related dictionary
     start_index = 0
-    if algo == "user":
-        for product in tqdm(products, desc="Build Product Dictionary Loading ...."):
-            dic[product] = start_index
-            start_index += 1
-    elif algo == "item":
-        for user in tqdm(users, desc="Build User Dictionary Loading ...."):
-            dic[user] = start_index
-            start_index += 1
-    return dic
+    for product in tqdm(products, desc="Build Product Dictionary Loading ...."):
+        product_dic[product] = start_index
+        start_index += 1
+    start_index = 0
+    for user in tqdm(users, desc="Build User Dictionary Loading ...."):
+        user_dic[user] = start_index
+        start_index += 1
+    return user_dic, product_dic
 
 
 # clean up the given format of the price and return the value of the price
@@ -78,7 +78,7 @@ def get_economic_factor(stock_rate, price, rate, high_price, low_price):
     if price == 0:
         return 0
     if (price >= high_price and stock_rate < 0) or (price <= low_price and stock_rate > 0):
-        return rate * abs(stock_rate) * 10
+        return rate * abs(stock_rate) * 3
     else:
         return 0
 
@@ -86,6 +86,56 @@ def get_economic_factor(stock_rate, price, rate, high_price, low_price):
 # reduce the size of the matrix with help of content-based algorithms
 # and locality sensitive hashing for collaborative filtering algorithm
 def reduce_matrix(review_text_dict, feature_size):
-    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=30, num_tables=2)
+    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=10, num_tables=2)
     product_ids = lsh_algo_item.find_big_clusters_items()
     return product_ids
+
+
+def calculate_estimate_rate(review_text_dict, given_item, sim_items, user_id, utility_matrix,
+                            product_dic, user_dict, algo):
+    sum_rate = 0
+    sum_sim = 0
+    given_item_vec = np.array([review_text_dict[given_item]])
+    for i_id in sim_items:
+        compare_product_vec = np.array([review_text_dict[i_id]])
+        cos_sim_value = cosine_similarity(given_item_vec, compare_product_vec).item(0)
+        utility = 0
+        if algo == "user":
+            utility = utility_matrix[user_id][product_dic[i_id]]
+        elif algo == "item":
+            utility = utility_matrix[i_id][user_dict[user_id]]
+        sum_rate += cos_sim_value * utility
+        sum_sim += cos_sim_value
+
+    if sum_sim == 0:
+        return 0
+    else:
+        return sum_rate / sum_sim
+
+
+# estimate utilities of users rates to products
+# (these products are similar to rated products by users)
+def fill_estimated_rates(review_text_dict, feature_size, rated_products, utility_matrix, product_dic, user_dict, algo):
+    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=8, num_tables=3)
+    for user_id in rated_products.keys():
+        rated_list = [i for i in rated_products[user_id]]
+        for product_id in product_dic.keys():
+            if algo == "user":
+                product_idx = product_dic[product_id]
+                if utility_matrix[user_id][product_idx] == 0:
+                    sim_items = lsh_algo_item.filter_similar_items(product_id, rated_list)
+                    if len(sim_items) > 0:
+                        utility_matrix[user_id][product_idx] = calculate_estimate_rate(
+                            review_text_dict, product_id, sim_items, user_id, utility_matrix,
+                            product_dic, user_dict, algo)
+                        rated_products[user_id].append(product_id)
+            elif algo == "item":
+                if utility_matrix[product_id][user_dict[user_id]] == 0:
+                    sim_items = lsh_algo_item.filter_similar_items(product_id, rated_list)
+                    if len(sim_items) > 0:
+                        utility_matrix[product_id][user_dict[user_id]] = calculate_estimate_rate(
+                            review_text_dict, product_id, sim_items, user_id, utility_matrix,
+                            product_dic, user_dict, algo)
+                        rated_products[user_id].append(product_id)
+
+        # print(len(rated_products[user_id]))

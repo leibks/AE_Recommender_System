@@ -25,7 +25,8 @@ def build_user_matrix(users, products):
 
 # utility (value) consider the rate from 0 to 5 and economic factor
 # , each row represent a user, and each column represent a product
-def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_price, consider_economic=False):
+def build_user_utility_matrix(utility_matrix, df, product_dic, rated_products,
+                              high_price, low_price, consider_economic=False):
     for index in tqdm(df.index, desc="Build Utility Matrix Loading ...."):
         user_id = df["reviewerID"][index]
         product_id = df["asin"][index]
@@ -43,33 +44,32 @@ def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_p
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:
             economic_factor = 0
-        utility_matrix[user_id][product_dic[product_id]] = rate + economic_factor
+        product_idx = product_dic[product_id]
+        utility_matrix[user_id][product_idx] = rate + economic_factor
+        # record rated products
+        if user_id not in rated_products:
+            rated_products[user_id] = []
+        rated_products[user_id].append(product_id)
 
 
 # value is the (rate to the product for the user - average rate for the user),
 # each row represent a user's a list of products
-def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids, product_dic):
+def build_user_similarity_matrix(similarity_matrix, utility_matrix, rated_products, product_dic):
     for user_id in tqdm(similarity_matrix.keys(), desc="Build Sim Matrix Loading ...."):
-        products = utility_matrix[user_id]
-        sum_rates = 0
-        length = 0
-        for rate in products:
-            if rate > 0:
-                sum_rates += rate
-                length += 1
-        if length == 0:
-            continue
-        average = sum_rates / length
-        for product_id in product_ids:
-            if utility_matrix[user_id][product_dic[product_id]] != 0:
-                similarity_matrix[user_id][product_dic[product_id]] \
-                    = utility_matrix[user_id][product_dic[product_id]] - average
+        product_list = rated_products[user_id]
+        sum_rate = 0
+        for product_id in product_list:
+            product_idx = product_dic[product_id]
+            sum_rate += utility_matrix[user_id][product_idx]
+        average_rate = sum_rate / len(product_list)
+        for product_id in product_list:
+            product_idx = product_dic[product_id]
+            similarity_matrix[user_id][product_idx] = utility_matrix[user_id][product_idx] - average_rate
 # ==================================== Set up matrix ====================================
 
 
 # ==================================== Normal method to find similar items ====================================
 def find_similar_users(user_id, similarity_matrix):
-    print(similarity_matrix)
     similar_users = {}
     given_user_vec = np.array([similarity_matrix[user_id]])
     for user in similarity_matrix.keys():
