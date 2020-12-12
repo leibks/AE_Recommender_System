@@ -111,6 +111,7 @@ def find_recommended_products_by_ii(user_id, utility_matrix, similarity_matrix, 
 
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
 
+
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
     for i in sort_products:
@@ -149,6 +150,7 @@ def find_recommended_products_by_ii_lsh(user_id, utility_matrix, lsh_algo, user_
             else:
                 utility_matrix[product_id][idx] = sum_weights / sum_similarity
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
+        print(all_product_utilities[product_id])
 
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
