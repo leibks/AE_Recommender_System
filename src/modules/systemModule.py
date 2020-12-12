@@ -76,7 +76,7 @@ class SystemModule:
             self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
             self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
         else:
-            fetch_res = fetch_users_products(df, algo)
+            fetch_res = fetch_users_products(df)
             self.user_ids = fetch_res[0]
             self.product_ids = fetch_res[1]
             print(len(self.user_ids))
@@ -85,7 +85,8 @@ class SystemModule:
                 print("execute reduce")
                 # fetch the users profile and products features firstly
                 self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-                self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
+                self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(
+                    self.product_reviews)
                 self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
                 self.user_ids, self.product_ids = reduce_matrix(self.user_ids, self.product_ids,
                                                                 self.review_text_dict, self.user_profiles_dict,
@@ -207,9 +208,8 @@ if __name__ == '__main__':
     # m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
     # m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content")
-    # m.find_recommended_products("AMPDBHNK02WIY", "content", lsh=True)
-    # m.find_recommended_products("Tazman32", "item", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "user", reduce=True)
+    m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
     # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
@@ -222,6 +222,6 @@ if __name__ == '__main__':
     # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
     # m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
 
-    m.set_up_matrix("resource/original_data/highly_filled_electronic_data.csv", "user", reduce=False, eco=False)
-    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
-    m.find_recommended_products("Appa", "user", lsh=False)
+    # m.set_up_matrix("resource/original_data/highly_filled_electronic_data.csv", "user", reduce=False, eco=False)
+    # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
+    # m.find_recommended_products("Appa", "user", lsh=False)

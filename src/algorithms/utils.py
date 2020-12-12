@@ -6,7 +6,7 @@ from tqdm import tqdm
 from .lsh_for_cosine_similarity import *
 
 
-def fetch_users_products(df, algo="user"):
+def fetch_users_products(df):
     user_id_list = df["reviewerID"].tolist()
     product_id_list = df["asin"].tolist()
     users = set(user_id_list)
@@ -87,9 +87,9 @@ def get_economic_factor(stock_rate, price, rate, high_price, low_price):
 # and locality sensitive hashing for collaborative filtering algorithm
 def reduce_matrix(user_ids, product_ids, review_text_dict, user_profiles_dict, feature_size, algo):
     if algo == "user":
-        lsh_algo_user = LSH(user_profiles_dict, feature_size, hash_size=6, num_tables=5)
+        lsh_algo_user = LSH(user_profiles_dict, feature_size, hash_size=3, num_tables=2)
         user_ids = lsh_algo_user.find_big_clusters_items()
     elif algo == "item":
-        lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=4, num_tables=5)
+        lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=3, num_tables=1)
         product_ids = lsh_algo_item.find_big_clusters_items()
     return user_ids, product_ids
