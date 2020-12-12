@@ -85,8 +85,8 @@ def get_economic_factor(stock_rate, price, rate, high_price, low_price):
 
 # reduce the size of the matrix with help of content-based algorithms
 # and locality sensitive hashing for collaborative filtering algorithm
-def reduce_matrix(review_text_dict, feature_size):
-    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=10, num_tables=2)
+def reduce_matrix(review_text_dict, feature_size, hash_size, num_tables):
+    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=hash_size, num_tables=num_tables)
     product_ids = lsh_algo_item.find_big_clusters_items()
     return product_ids
 
@@ -120,6 +120,8 @@ def fill_estimated_rates(review_text_dict, feature_size, rated_products, utility
     lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=hash_size, num_tables=num_tables)
     for user_id in tqdm(rated_products.keys(), desc="Estimate Utilities Loading ...."):
         rated_list = [i for i in rated_products[user_id]]
+        if len(rated_list) == 0:
+            continue
         for product_id in product_dic.keys():
             if algo == "user":
                 product_idx = product_dic[product_id]

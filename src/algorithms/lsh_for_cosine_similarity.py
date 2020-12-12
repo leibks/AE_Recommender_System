@@ -91,9 +91,9 @@ class LSH:
         for ht in self.hash_tables:
             similar_res = sorted(ht.hash_table.items(), key=lambda item: len(item[1]), reverse=True)
             total_items = len(ht.hash_table)
-            similar_res = similar_res[:int(total_items * 0.5)]
+            similar_res = similar_res[:int(total_items * 0.1)]
             for i in tqdm(similar_res, desc="Find Big Cluster's Item Loading ...."):
-                print(f"size of similarity list: {len(i[1])}")
+                # print(f"size of similarity list: {len(i[1])}")
                 return_items.update(i[1])
         return return_items
 

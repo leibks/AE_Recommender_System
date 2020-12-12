@@ -83,10 +83,10 @@ class SystemModule:
         self.product_ids = fetch_res[1]
         print(f"number of users: {len(self.user_ids)}")
         print(f"number of products: {len(self.product_ids)}")
-        # if reduce:
-        #     print("execute reduce")
-        #     self.product_ids = reduce_matrix(self.review_text_dict, self.content_feature_size)
-        #     print(f"reduced number of products: {len(self.product_ids)}")
+        if reduce:
+            print("execute reduce products")
+            self.product_ids = reduce_matrix(self.review_text_dict, self.content_feature_size, hash_size, num_tables)
+            print(f"After reduce, number of products: {len(self.product_ids)}")
         dict_res = build_dictionary(self.user_ids, self.product_ids)
         self.user_dict = dict_res[0]
         self.product_dict = dict_res[1]
@@ -115,6 +115,7 @@ class SystemModule:
                                  hash_size, num_tables)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
                                          self.user_ids, self.user_dict)
+            print("rate of filled utility: ")
             print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)
             # print(self.product_utility_matrix)
@@ -221,8 +222,12 @@ if __name__ == '__main__':
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", hash_size=8, num_tables=2, eco=True)
-    m.find_recommended_products("A2HOI48JK8838M", "user", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=True,
+    #                 hash_size=8, num_tables=2, eco=True)
+    # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
+
+    m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
+    m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/fashion_stock.csv", "content", reduce=False)
     # m.find_recommended_products("AUE82PKEUMKZB", "content", lsh=True)
@@ -230,10 +235,6 @@ if __name__ == '__main__':
     # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
     # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
     # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
-
-
-    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", hash_size=20, num_tables=3)
-    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
     # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)

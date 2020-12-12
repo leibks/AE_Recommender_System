@@ -43,11 +43,12 @@ def build_item_utility_matrix(utility_matrix, df, user_dic, rated_products, high
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:
             economic_factor = 0
-        utility_matrix[product_id][user_dic[user_id]] = rate + economic_factor
-        # record rated products
-        if user_id not in rated_products:
-            rated_products[user_id] = []
-        rated_products[user_id].append(product_id)
+        if product_id in utility_matrix:
+            utility_matrix[product_id][user_dic[user_id]] = rate + economic_factor
+            # record rated products
+            if user_id not in rated_products:
+                rated_products[user_id] = []
+            rated_products[user_id].append(product_id)
 
 
 # value is the (rate to the product given by one user - average rate for this product),

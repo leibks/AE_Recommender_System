@@ -44,12 +44,14 @@ def build_user_utility_matrix(utility_matrix, df, product_dic, rated_products,
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:
             economic_factor = 0
-        product_idx = product_dic[product_id]
-        utility_matrix[user_id][product_idx] = rate + economic_factor
-        # record rated products
+
         if user_id not in rated_products:
             rated_products[user_id] = []
-        rated_products[user_id].append(product_id)
+        if product_id in product_dic:
+            product_idx = product_dic[product_id]
+            utility_matrix[user_id][product_idx] = rate + economic_factor
+            # record rated products
+            rated_products[user_id].append(product_id)
 
 
 # value is the (rate to the product for the user - average rate for the user),
@@ -57,6 +59,8 @@ def build_user_utility_matrix(utility_matrix, df, product_dic, rated_products,
 def build_user_similarity_matrix(similarity_matrix, utility_matrix, rated_products, product_dic):
     for user_id in tqdm(similarity_matrix.keys(), desc="Build Sim Matrix Loading ...."):
         product_list = rated_products[user_id]
+        if len(product_list) == 0:
+            continue
         sum_rate = 0
         for product_id in product_list:
             product_idx = product_dic[product_id]
