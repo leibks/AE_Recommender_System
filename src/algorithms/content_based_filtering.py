@@ -75,9 +75,6 @@ def review_text_tfidf(product_reviews):
     for i in range(len(review_text)):
         review_text_dict[product_reviews["asin"][i]] = review_text[i]
     # print(tfidf_review.shape)  # (21, 1200)
-    print("review_text_dict", review_text_dict)
-    print("review_text", review_text)
-    print("tfidf_review", tfidf_review)
     return review_text_dict, review_text, tfidf_review, tfidf_review.shape[1]
 
 
