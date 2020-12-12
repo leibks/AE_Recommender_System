@@ -130,7 +130,7 @@ class SystemModule:
                 recommended_products = find_recommended_products_by_ii(
                     user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
         elif algo == "content":
-            user_profile = build_user_profile(user_id, self.review_text, self.product_reviews, self.raw_reviews)
+            user_profile = build_user_profile(user_id, self.content_feature_size, self.review_text, self.product_reviews, self.raw_reviews)
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
                     user_id, self.content_feature_size, self.review_text_dict,
@@ -206,8 +206,8 @@ if __name__ == '__main__':
     #     print(i, m.predict_utility(v[0], v[1], "item"))
     #Test['Predict'] = user_predict
 
-    m.set_up_matrix("resource/cleaned_data/fashion.csv", "item", reduce=True)
-    m.find_recommended_products("A1UVZHFDTI4FPK", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/fashion.csv", "item", reduce=True)
+    # m.find_recommended_products("A1UVZHFDTI4FPK", "item", lsh=True)
 
     m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
     # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
