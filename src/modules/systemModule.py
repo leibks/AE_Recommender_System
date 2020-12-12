@@ -130,7 +130,7 @@ class SystemModule:
                 recommended_products = find_recommended_products_by_ii(
                     user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
         elif algo == "content":
-            user_profile = build_user_profile(user_id, self.review_text, self.product_reviews, self.raw_reviews)
+            user_profile = build_user_profile(user_id, self.content_feature_size, self.review_text, self.product_reviews, self.raw_reviews)
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
                     user_id, self.content_feature_size, self.review_text_dict,
@@ -142,6 +142,7 @@ class SystemModule:
                     user_id, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)
 
         print(recommended_products)
+        return recommended_products
 
     # predict the utility of one product to one user by selecting the algorithm
     # before calling the function, we have to call the set up function and input the same algorithm
@@ -175,6 +176,9 @@ class SystemModule:
                 return 0
             else:
                 return sum_weights / sum_similarity
+        elif algo == "content":
+            top_recom = self.find_recommended_products(user_id, "content", lsh=True)
+            print("top_recom",top_recom)
         return 0
 
 
@@ -202,11 +206,12 @@ if __name__ == '__main__':
     #     print(i, m.predict_utility(v[0], v[1], "item"))
     #Test['Predict'] = user_predict
 
-    m.set_up_matrix("resource/cleaned_data/fashion.csv", "item", reduce=True)
-    m.find_recommended_products("A1UVZHFDTI4FPK", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/fashion.csv", "item", reduce=True)
+    # m.find_recommended_products("A1UVZHFDTI4FPK", "item", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "user", reduce=True)
-    # m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
+    # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
+    m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
 
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
     # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
