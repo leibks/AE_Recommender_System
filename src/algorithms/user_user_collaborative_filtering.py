@@ -32,11 +32,13 @@ def build_user_utility_matrix(utility_matrix, df, product_dic, high_price, low_p
         if user_id not in utility_matrix:
             continue
         rate = df["overall"][index]
-        price = clean_price(df["price"][index])
+        if not isinstance(rate, float):
+            rate = float(rate)
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
         if consider_economic:
+            price = clean_price(df["price"][index])
             stock_rate = df["stockReturn"][index]
             economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         else:
@@ -67,6 +69,7 @@ def build_user_similarity_matrix(similarity_matrix, utility_matrix, product_ids,
 
 # ==================================== Normal method to find similar items ====================================
 def find_similar_users(user_id, similarity_matrix):
+    print(similarity_matrix)
     similar_users = {}
     given_user_vec = np.array([similarity_matrix[user_id]])
     for user in similarity_matrix.keys():
@@ -124,9 +127,8 @@ def find_recommended_products_by_uu(user_id, utility_matrix, similarity_matrix, 
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_uu_lsh(user_id, utility_matrix, similarity_matrix, product_dic, num_recommend):
+def find_recommended_products_by_uu_lsh(user_id, utility_matrix, lsh_algo, product_dic, num_recommend):
     all_product_utilities = {}
-    lsh_algo = LSH(similarity_matrix, len(product_dic))
     similarity_dic = lsh_algo.build_similar_dict(user_id)
 
     for product_id in tqdm(product_dic.keys(), desc="Find Recommendation(LSH) Loading ...."):
@@ -161,5 +163,3 @@ def find_recommended_products_by_uu_lsh(user_id, utility_matrix, similarity_matr
 
     return recommended_product
 # ==================================== LSH method to find similar items ====================================
-
-
