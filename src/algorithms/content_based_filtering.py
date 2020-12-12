@@ -2,11 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-import nltk
-from nltk.corpus import stopwords
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
 from src.algorithms.utils import (
@@ -14,6 +9,11 @@ from src.algorithms.utils import (
     clean_price
 )
 from nltk.corpus import stopwords
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 nltk.download('stopwords')
 
 

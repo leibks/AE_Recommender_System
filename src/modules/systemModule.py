@@ -77,6 +77,7 @@ class SystemModule:
         self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
         self.review_text_dict, self.review_text, self.tfidf_review, self.content_feature_size = review_text_tfidf(
             self.product_reviews)
+        print(f"content feature size: {self.content_feature_size}")
         # fetch users and products
         fetch_res = fetch_users_products(df)
         self.user_ids = fetch_res[0]
@@ -222,7 +223,7 @@ if __name__ == '__main__':
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=True,
+    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
     #                 hash_size=8, num_tables=2, eco=True)
     # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
 
