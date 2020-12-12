@@ -20,7 +20,7 @@ def download(directory):
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Electronics.json.gz',
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_AMAZON_FASHION.json.gz',
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Toys_and_Games.json.gz']
-    sp500_url = "https://query1.finance.yahoo.com/v7/finance/download/%5EGSPC?period1=1509408000&period2=1572912000&interval=1mo&events=history&includeAdjustedClose=true"
+    sp500_url = "https://query1.finance.yahoo.com/v7/finance/download/%5EGSPC?period1=1514332800&period2=1546819200&interval=1d&events=history&includeAdjustedClose=true"
 
     file_names = []
     for url in data_source:
@@ -120,10 +120,13 @@ def data_join(file_names, sp500_name, directory):
     D['Date'] = year2018
     D['stockReturn'] = ret
 
-    # Read daily return data as Pandas data frames
+    # Read daily price data as Pandas data frames and process as daily return
 
     sp = pd.read_csv(sp500_name)
     sp['Date'] = pd.to_datetime(sp['Date']).dt.strftime('%Y/%m/%d')
+    sp['d2'] = sp['Adj Close'].shift(-1)
+    sp['stockReturn'] = (sp['d2'] - sp['Adj Close']) / sp['Adj Close']
+    sp = sp[['Date', 'stockReturn']]
 
     # Concatenate the full date dummy frame with SP daily return, and drop duplicates in date
     # i.e. missing date from sp data frame would be filled with "NaN" in "stockReturn" column
