@@ -73,7 +73,6 @@ class SystemModule:
         if algo == "content":
             self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
             self.review_text_dict, self.review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
-            # self.user_profile = build_user_profile(review_text, self.product_reviews, self.raw_reviews)
         else:
             fetch_res = fetch_users_products(df)
             self.user_ids = fetch_res[0]
@@ -84,9 +83,7 @@ class SystemModule:
                 print("execute reduce")
                 # fetch the users profile and products features firstly
                 self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-                self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(
-                    self.product_reviews)
-                self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+                self.review_text_dict, self.review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
                 self.user_ids, self.product_ids = reduce_matrix(self.user_ids, self.product_ids,
                                                                 self.review_text_dict, self.user_profiles_dict,
                                                                 self.content_features, algo)

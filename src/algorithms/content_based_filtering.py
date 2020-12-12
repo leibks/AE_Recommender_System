@@ -63,7 +63,6 @@ def build_user_profile(user, features, product_reviews, raw_reviews):
     for i in range(len(temp)):
         user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
 
-    # user_matrix = []
     user_profile = []
     for idx in tqdm(raw_reviews.index, desc="Build User Profile Loading ...."):
         if raw_reviews["reviewerID"][idx] == user:
