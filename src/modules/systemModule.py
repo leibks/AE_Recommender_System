@@ -151,7 +151,7 @@ class SystemModule:
                 cosine_sim = comp_cosine_similarity(user_profile, self.tfidf_review,
                                                     self.product_reviews["asin"], self.raw_reviews["reviewerID"])
                 recommended_products = find_recommended_products_by_content(
-                    user_id, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)
+                    user_id, cosine_sim, self.product_reviews, self.num_recommend)
 
         print(recommended_products)
         return recommended_products
@@ -216,13 +216,21 @@ if __name__ == '__main__':
     #     print(v[0])
     #     user_predict.append(m.predict_utility(v[0], v[1], "item"))
     #     print(i, m.predict_utility(v[0], v[1], "item"))
-    #Test['Predict'] = user_predict
+    # Test['Predict'] = user_predict
 
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
 
     m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", hash_size=8, num_tables=2, eco=True)
     m.find_recommended_products("A2HOI48JK8838M", "user", lsh=True)
+
+    # m.set_up_matrix("resource/cleaned_data/fashion_stock.csv", "content", reduce=False)
+    # m.find_recommended_products("AUE82PKEUMKZB", "content", lsh=True)
+
+    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
+    # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
+    # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
+
 
     # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", hash_size=20, num_tables=3)
     # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)

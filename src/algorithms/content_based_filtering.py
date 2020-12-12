@@ -9,6 +9,8 @@ from src.algorithms.utils import (
     get_economic_factor,
     clean_price
 )
+from nltk.corpus import stopwords
+nltk.download('stopwords')
 
 
 # =========================================== Set up matrix ================================================
@@ -54,7 +56,7 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
         if raw_reviews["reviewerID"][idx] == user:
             asin = raw_reviews["asin"][idx]
             product_idx = product_indices[asin]
-            # +1.0 is because many users give 5.0 score, which will make the score weight becomes 0
+            # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
             score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
             temp = (features[product_indices[asin]] * score_weight).tolist()
             for i in range(len(temp)):
@@ -65,24 +67,25 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
 
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
-    X1 = vectorizer.fit_transform(product_reviews["reviewText"])
+    tfidf_review = vectorizer.fit_transform(product_reviews["reviewText"])
 
-    review_text = X1.toarray()  # shape=(21, 1200)
+    review_text = tfidf_review.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
         review_text_dict[product_reviews["asin"][i]] = review_text[i]
-    # print(X1.shape)  # (21, 1200)
-    return review_text_dict, review_text, X1, X1.shape[1]
+    # print(tfidf_review.shape)  # (21, 1200)
+    return review_text_dict, review_text, tfidf_review, tfidf_review.shape[1]
 
 
-# combine same data into one column
-# stem data e.g. (videos -> video)
-# clean data; convert all data to lower case and strip names of spaces
+## combine same data into one column
+## stem data e.g. (videos -> video)
+## clean data; convert all data to lower case and strip names of spaces
 def process_review_text(product_reviews):
     # stem data e.g. (videos -> video)
     sno = nltk.stem.SnowballStemmer('english')
 
+    en_stops = set(stopwords.words('english'))
     for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
         # for i in range(len(product_reviews["reviewText"])):
         sen = []
@@ -91,7 +94,8 @@ def process_review_text(product_reviews):
         if not pd.isnull(review):
             words = review.split()
             for w in words:
-                sen.append(sno.stem(w))
+                if w not in en_stops:
+                    sen.append(sno.stem(w))
         product_reviews["reviewText"][i] = ' '.join(sen)
 
     return product_reviews
@@ -104,7 +108,7 @@ def build_initial_matrix(eco, raw_reviews, high_value, low_value):
 
     product_reviews = process_review_text(product_reviews)
 
-    if eco:
+    if eco == True:
         raw_reviews = comb_stock(raw_reviews, high_value, low_value)
 
     return product_reviews, raw_reviews
@@ -125,7 +129,7 @@ def comp_cosine_similarity(user_profiles, X1, col, idx):
 
 
 # Function that takes in product title as input and outputs most similar products
-def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend, threshold=0.1):
+def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend):
     products = cosine_sim.loc[reviewerID, :]
     # print(products)
     products_value = products.values
@@ -137,8 +141,7 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
     for i in range(min(num_recommend, len(sorted_index))):
-        if sorted_product[i] > threshold:
-            res_scores.append(sorted_index[i])
+        res_scores.append(sorted_index[i])
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
