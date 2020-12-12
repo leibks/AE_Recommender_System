@@ -10,12 +10,20 @@ from datetime import datetime, timedelta, date
 pd.set_option('display.max_columns', None)
 review_date_threshold = datetime.strptime('01 01 2018', '%m %d %Y').timestamp()
 
-
+# https://nijianmo.github.io/amazon/index.html#subsets
 def download(directory):
-    data_source = ['http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Luxury_Beauty.json.gz',
-                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Electronics.json.gz',
-                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/AMAZON_FASHION.json.gz',
-                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Toys_and_Games.json.gz',
+    # data_source = ['http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Luxury_Beauty.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Electronics.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/AMAZON_FASHION.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFiles/Toys_and_Games.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Luxury_Beauty.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Electronics.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_AMAZON_FASHION.json.gz',
+    #                'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Toys_and_Games.json.gz']
+    data_source = ['http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall/AMAZON_FASHION_5.json.gz',
+                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall/Luxury_Beauty_5.json.gz',
+                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall/Electronics_5.json.gz',
+                   'http://deepyeti.ucsd.edu/jianmo/amazon/categoryFilesSmall/Toys_and_Games_5.json.gz',
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Luxury_Beauty.json.gz',
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_Electronics.json.gz',
                    'http://deepyeti.ucsd.edu/jianmo/amazon/metaFiles/meta_AMAZON_FASHION.json.gz',
@@ -27,7 +35,8 @@ def download(directory):
         file_name = url.split('/')[-1]
         file_names.append(file_name.split('.')[0])
         full_dir = directory + file_name
-        if os.path.exists(full_dir):
+        json_name = full_dir.replace('.gz', '')
+        if os.path.exists(full_dir) or os.path.exists(json_name):
             print("File already exists, skip downloading for ", file_name)
         else:
             print("Downloading to file {}\n".format(full_dir))
@@ -38,7 +47,7 @@ def download(directory):
         print("File already exists, skip downloading for ", sp500_name)
     else:
         r = requests.get(sp500_url, allow_redirects=True)
-        open('sp500_name', 'wb').write(r.content)
+        open(sp500_name, 'wb').write(r.content)
 
     print("Finished downloading data...")
     return file_names, sp500_name
@@ -50,7 +59,7 @@ def process_data(names, directory):
     tmp = []
     for name in names:
         file_to_unzip = directory + name + '.json.gz'
-        json_file_name = directory + name + '.json'
+        json_file_name = directory + name.replace('_5', '') + '.json'
         if os.path.exists(json_file_name):
             print("Already has unzipped file " + json_file_name)
             continue
@@ -63,6 +72,7 @@ def process_data(names, directory):
     chunk_list = []
     i = 1
     for name in names:
+        name = name.replace('_5', '')
         expected_name = '{}{}_2018.csv'.format(directory, name)
         if 'meta' not in name:
             if os.path.exists(expected_name):
@@ -104,7 +114,7 @@ def data_join(file_names, sp500_name, directory):
     for name in file_names:
         if 'meta' in name:
             continue
-        name = name + '_2018.csv'
+        name = name.replace('_5', '') + '_2018.csv'
         print("Loaded csv:", directory + name)
         df_list.append(pd.read_csv(directory + name))
     year2018 = []
@@ -146,6 +156,11 @@ def data_join(file_names, sp500_name, directory):
 
     # A list of 4 joined data frames
     joined = [join_process(df) for df in df_list]
+    for df in joined:
+        output_name = df['main_cat'][0]
+        if output_name in ['Books', 'Computers', 'Tools & Home Improvement', 'Home Audio & Theater']:
+            output_name = 'Electronics'
+        df.to_csv(directory + output_name + '_stock.csv')
     return joined
 
 
