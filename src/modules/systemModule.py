@@ -51,8 +51,7 @@ class SystemModule:
         self.content_features = 0
         # key: product asin, value: features (words in review text)
         self.review_text_dict = {}
-        # key: reviewerID, value: features (words in review text)
-        self.user_profiles_dict = {}
+        self.review_text = []
         # use TF-IDF on review text
         self.tfidf_review = pd.DataFrame()
         self.product_reviews = None
@@ -73,8 +72,7 @@ class SystemModule:
             low_value = identify_res[1]
         if algo == "content":
             self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-            self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
-            self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+            self.review_text_dict, self.review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
         else:
             fetch_res = fetch_users_products(df)
             self.user_ids = fetch_res[0]
@@ -85,9 +83,7 @@ class SystemModule:
                 print("execute reduce")
                 # fetch the users profile and products features firstly
                 self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-                self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(
-                    self.product_reviews)
-                self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+                self.review_text_dict, self.review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
                 self.user_ids, self.product_ids = reduce_matrix(self.user_ids, self.product_ids,
                                                                 self.review_text_dict, self.user_profiles_dict,
                                                                 self.content_features, algo)
@@ -134,12 +130,13 @@ class SystemModule:
                 recommended_products = find_recommended_products_by_ii(
                     user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
         elif algo == "content":
+            user_profile = build_user_profile(user_id, self.review_text, self.product_reviews, self.raw_reviews)
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
                     user_id, self.content_features, self.review_text_dict,
-                    self.user_profiles_dict[user_id], self.num_recommend)
+                    user_profile, self.num_recommend)
             else:
-                cosine_sim = comp_cosine_similarity(self.user_profiles, self.tfidf_review,
+                cosine_sim = comp_cosine_similarity(user_profile, self.tfidf_review,
                                                     self.product_reviews["asin"], self.raw_reviews["reviewerID"])
                 recommended_products = find_recommended_products_by_content(
                     user_id, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)

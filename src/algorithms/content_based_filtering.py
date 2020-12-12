@@ -52,7 +52,7 @@ def comb_stock(raw_reviews, high_price, low_price):
 
 
 # Function that builds user profiles
-def build_user_profiles(features, product_reviews, raw_reviews):
+def build_user_profile(user, features, product_reviews, raw_reviews):
     # Construct a reverse map of product_indices and product asins
     product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
 
@@ -63,26 +63,26 @@ def build_user_profiles(features, product_reviews, raw_reviews):
     for i in range(len(temp)):
         user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
 
-    # user_matrix = []
-    user_profiles_dict = {}
-    for idx in tqdm(raw_reviews.index, desc="Build User Profiles Loading ...."):
-        user = raw_reviews["reviewerID"][idx]
-        asin = raw_reviews["asin"][idx]
-        product_idx = product_indices[asin]
-        # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
-        score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
-        user_profiles_dict[raw_reviews["reviewerID"][idx]] = (features[product_indices[asin]] * score_weight).tolist()
-        # user_matrix.append(features[product_indices[asin]] * score_weight)
+    user_profile = []
+    for idx in tqdm(raw_reviews.index, desc="Build User Profile Loading ...."):
+        if raw_reviews["reviewerID"][idx] == user:
+            asin = raw_reviews["asin"][idx]
+            product_idx = product_indices[asin]
+            # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
+            score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
+            user_profile = (features[product_indices[asin]] * score_weight).tolist()
+            # user_matrix.append(features[product_indices[asin]] * score_weight)
 
     # user_profiles_dict = {}
     # for i in tqdm(range(len(user_matrix)), desc="Build User Profile Dict Loading ...."):
     #     user_profiles_dict[raw_reviews["reviewerID"][i]] = user_matrix[i].tolist()
-    return user_profiles_dict
+    return user_profile
 
 
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     X1 = vectorizer.fit_transform(product_reviews["reviewText"])
+    
     review_text = X1.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
