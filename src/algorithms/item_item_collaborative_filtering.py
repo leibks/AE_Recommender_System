@@ -22,7 +22,7 @@ def build_item_matrix(users, products):
 
 # utility (value) consider the rate from 0 to 5 and economic factor
 # , each row represent a product, and each column represent a user
-def build_item_utility_matrix(utility_matrix, df, user_dic, high_price, low_price, consider_economic=False):
+def build_item_utility_matrix(utility_matrix, df, user_dic, rated_products, high_price, low_price, consider_economic=False):
     test = []
     for index in tqdm(df.index, desc="Build Utility Matrix Loading ...."):
         user_id = df["reviewerID"][index]
@@ -44,6 +44,10 @@ def build_item_utility_matrix(utility_matrix, df, user_dic, high_price, low_pric
         else:
             economic_factor = 0
         utility_matrix[product_id][user_dic[user_id]] = rate + economic_factor
+        # record rated products
+        if user_id not in rated_products:
+            rated_products[user_id] = []
+        rated_products[user_id].append(product_id)
 
 
 # value is the (rate to the product given by one user - average rate for this product),
@@ -111,7 +115,6 @@ def find_recommended_products_by_ii(user_id, utility_matrix, similarity_matrix, 
 
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
 
-
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []
     for i in sort_products:
@@ -150,7 +153,7 @@ def find_recommended_products_by_ii_lsh(user_id, utility_matrix, lsh_algo, user_
             else:
                 utility_matrix[product_id][idx] = sum_weights / sum_similarity
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
-        print(all_product_utilities[product_id])
+        # print(all_product_utilities[product_id])
 
     sort_products = sorted(all_product_utilities.items(), key=lambda item: item[1], reverse=True)
     recommended_product = []

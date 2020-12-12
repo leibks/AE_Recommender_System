@@ -28,7 +28,6 @@ class HashTable:
         new_vec = np.dot(input_vec, self.projections.T)[0]
         bitwise = (new_vec > 0).astype('int')
         hash_value = ''.join(bitwise.astype('str'))
-        # "01010"
         self.hash_values[item_name] = hash_value
         if hash_value not in self.hash_table.keys():
             self.hash_table[hash_value] = []
@@ -57,7 +56,7 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, hash_size=4, num_tables=3, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=2, num_tables=3, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.hash_size = hash_size
@@ -75,15 +74,15 @@ class LSH:
         given_item_vec = np.array([self.input_matrix[given_item]])
         for ht in self.hash_tables:
             list_sim_items = ht.fetch_similar_items(given_item)
-            print(f"size of similarity list: {len(list_sim_items)}")
-            for item in list_sim_items: # tqdm(list_sim_items, desc="Fetch Similar Items Loading ...."):
+            # print(f"size of similarity list: {len(list_sim_items)}")
+            for item in list_sim_items:  # tqdm(list_sim_items, desc="Fetch Similar Objects Loading ...."):
                 if item not in similar_dic and item != given_item:
                     compare_product_vec = np.array([self.input_matrix[item]])
                     cos_sim_value = cosine_similarity(given_item_vec, compare_product_vec).item(0)
                     if cos_sim_value > 0:
                         similar_dic[item] = cos_sim_value
 
-        print(f"number of similar items: {len(similar_dic)}")
+        # print(f"number of similar items: {len(similar_dic)}")
         return similar_dic
 
     # find items that locate in the big clusters (it shares the same hash value with many items)
@@ -97,3 +96,13 @@ class LSH:
                 print(f"size of similarity list: {len(i[1])}")
                 return_items.update(i[1])
         return return_items
+
+    # find similar items from the list to the given item
+    def filter_similar_items(self, check_product, item_list):
+        similar_items = set()
+        for ht in self.hash_tables:
+            hash_value_check = ht.hash_values[check_product]
+            for item in item_list:
+                if ht.hash_values[item] == hash_value_check:
+                    similar_items.add(item)
+        return list(similar_items)

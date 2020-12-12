@@ -3,16 +3,22 @@ import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import nltk
+<<<<<<< HEAD
 from nltk.corpus import stopwords
 nltk.download('stopwords')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
+=======
+>>>>>>> 289452a1991074e83a7b713c3b147ea2af60f8a1
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
 from src.algorithms.utils import (
     get_economic_factor,
     clean_price
 )
+from nltk.corpus import stopwords
+nltk.download('stopwords')
+
 
 # =========================================== Set up matrix ================================================
 def process_price(price):
@@ -30,7 +36,6 @@ def process_price(price):
 
 # combine stock market data with reviews to do recommendation
 def comb_stock(raw_reviews, high_price, low_price):
-
     for idx in tqdm(raw_reviews.index, desc="Combine Stock Loading ...."):
         price = clean_price(raw_reviews["price"][idx])
         stock_rate = raw_reviews["stockReturn"][idx]
@@ -70,8 +75,13 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_review = vectorizer.fit_transform(product_reviews["reviewText"])
+<<<<<<< HEAD
     
     review_text = tfidf_review.toarray()  # shape=(product number, feature number)
+=======
+
+    review_text = tfidf_review.toarray()  # shape=(21, 1200)
+>>>>>>> 289452a1991074e83a7b713c3b147ea2af60f8a1
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
@@ -89,7 +99,7 @@ def process_review_text(product_reviews):
 
     en_stops = set(stopwords.words('english'))
     for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
-    # for i in range(len(product_reviews["reviewText"])):
+        # for i in range(len(product_reviews["reviewText"])):
         sen = []
         review = product_reviews["reviewText"][i]
         is_noun = lambda pos: pos[:2] == 'NN'
