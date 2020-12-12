@@ -51,8 +51,7 @@ class SystemModule:
         self.content_features = 0
         # key: product asin, value: features (words in review text)
         self.review_text_dict = {}
-        # key: reviewerID, value: features (words in review text)
-        self.user_profiles_dict = {}
+        self.review_text = []
         # use TF-IDF on review text
         self.tfidf_review = pd.DataFrame()
         self.product_reviews = None
@@ -69,8 +68,8 @@ class SystemModule:
         low_value = identify_res[1]
         if algo == "content":
             self.product_reviews, self.raw_reviews = build_initial_matrix(eco, df, high_value, low_value)
-            self.review_text_dict, review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
-            self.user_profiles_dict = build_user_profiles(review_text, self.product_reviews, self.raw_reviews)
+            self.review_text_dict, self.review_text, self.tfidf_review, self.content_features = review_text_tfidf(self.product_reviews)
+            # self.user_profile = build_user_profile(review_text, self.product_reviews, self.raw_reviews)
         else:
             fetch_res = fetch_users_products(df, algo)
             self.user_ids = fetch_res[0]
@@ -126,12 +125,13 @@ class SystemModule:
                 recommended_products = find_recommended_products_by_ii(
                     user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
         elif algo == "content":
+            user_profile = build_user_profile(user_id, self.review_text, self.product_reviews, self.raw_reviews)
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
                     user_id, self.content_features, self.review_text_dict,
-                    self.user_profiles_dict[user_id], self.num_recommend)
+                    user_profile, self.num_recommend)
             else:
-                cosine_sim = comp_cosine_similarity(self.user_profiles, self.tfidf_review,
+                cosine_sim = comp_cosine_similarity(user_profile, self.tfidf_review,
                                                     self.product_reviews["asin"], self.raw_reviews["reviewerID"])
                 recommended_products = find_recommended_products_by_content(
                     user_id, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)
@@ -175,12 +175,14 @@ class SystemModule:
 
 if __name__ == '__main__':
     m = SystemModule()
-    m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
-    m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/beauty.csv", "content")
+    m.find_recommended_products("A11UFAL6F8KPQ8", "content", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content")
-    # m.find_recommended_products("AMPDBHNK02WIY", "content", lsh=True)
+    # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
     # m.find_recommended_products("Tazman32", "item", lsh=True)
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user")
+    # m.set_up_matrix("resource/cleaned_data/beauty.csv", "user", reduce=True)
+    # m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
     # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
@@ -189,9 +191,9 @@ if __name__ == '__main__':
     # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
     # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "item"))
 
-    m.set_up_matrix("resource/original_data/ratings_Electronics.csv", "user", reduce=False, eco=False)
-    # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
-    m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
+    # m.set_up_matrix("resource/original_data/ratings_Electronics.csv", "user", reduce=False, eco=False)
+    # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "user"))
+    # m.find_recommended_products("A2CX7LUOHB2NDG", "user", lsh=True)
 
     # m.find_recommended_products("S. Ortega", "item", lsh=True)
     # windows = platform.system() == 'Windows'
