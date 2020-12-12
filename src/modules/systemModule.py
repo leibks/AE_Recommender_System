@@ -97,29 +97,33 @@ class SystemModule:
             self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
             build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, self.rated_products,
                                       high_value, low_value, eco)
+            print("rate of original utility: ")
+            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             fill_estimated_rates(self.review_text_dict, self.content_feature_size, self.rated_products,
                                  self.user_utility_matrix, self.product_dict, self.user_dict, algo,
                                  hash_size, num_tables)
+            print("rate of filled utility: ")
+            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, self.rated_products,
                                          self.product_dict)
             # print(self.user_utility_matrix)
-            print("rate of filled utility: ")
-            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             self.lsh = LSH(self.user_sim_matrix, len(self.product_ids), hash_size=hash_size, num_tables=num_tables)
         elif algo == "item":
             self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
             self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, self.rated_products,
                                       high_value, low_value, eco)
+            print("rate of original utility: ")
+            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             fill_estimated_rates(self.review_text_dict, self.content_feature_size, self.rated_products,
                                  self.product_utility_matrix, self.product_dict, self.user_dict, algo,
                                  hash_size, num_tables)
-            build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
-                                         self.user_ids, self.user_dict)
             print("rate of filled utility: ")
             print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
-            self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)
+            build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
+                                         self.user_ids, self.user_dict)
             # print(self.product_utility_matrix)
+            self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
@@ -237,14 +241,6 @@ if __name__ == '__main__':
     # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
     # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
 
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
-    # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
-    # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
-
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "user"))
     # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
-
-    # m.set_up_matrix("resource/original_data/highly_filled_electronic_data.csv", "user", reduce=False, eco=False)
-    # # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
-    # m.find_recommended_products("Appa", "user", lsh=False)
