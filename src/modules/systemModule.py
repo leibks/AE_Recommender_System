@@ -6,6 +6,7 @@ from src.algorithms.user_user_collaborative_filtering import *
 from src.algorithms.item_item_collaborative_filtering import *
 from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
+from src.performance.statistics import *
 path = os.getcwd()
 sys.path.append(path)
 
@@ -95,23 +96,28 @@ class SystemModule:
             self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
             build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, self.rated_products,
                                       high_value, low_value, eco)
-            fill_estimated_rates(self.review_text_dict, self.content_feature_size,
-                                 self.rated_products, self.user_utility_matrix, self.product_dict, self.user_dict, algo)
+            fill_estimated_rates(self.review_text_dict, self.content_feature_size, self.rated_products,
+                                 self.user_utility_matrix, self.product_dict, self.user_dict, algo,
+                                 hash_size, num_tables)
             build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, self.rated_products,
                                          self.product_dict)
             # print(self.user_utility_matrix)
+            print("rate of filled utility: ")
+            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             self.lsh = LSH(self.user_sim_matrix, len(self.product_ids), hash_size=hash_size, num_tables=num_tables)
         elif algo == "item":
             self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
             self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
             build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, self.rated_products,
                                       high_value, low_value, eco)
-            fill_estimated_rates(self.review_text_dict, self.content_feature_size,
-                                 self.rated_products, self.product_utility_matrix, self.product_dict, self.user_dict, algo)
+            fill_estimated_rates(self.review_text_dict, self.content_feature_size, self.rated_products,
+                                 self.product_utility_matrix, self.product_dict, self.user_dict, algo,
+                                 hash_size, num_tables)
             build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
                                          self.user_ids, self.user_dict)
+            print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
             self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)
-            print(self.product_utility_matrix)
+            # print(self.product_utility_matrix)
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
@@ -135,7 +141,8 @@ class SystemModule:
                 recommended_products = find_recommended_products_by_ii(
                     user_id, self.product_utility_matrix, self.product_sim_matrix, self.user_dict, self.num_recommend)
         elif algo == "content":
-            user_profile = build_user_profile(user_id, self.review_text, self.product_reviews, self.raw_reviews)
+            user_profile = build_user_profile(user_id, self.content_feature_size, self.review_text,
+                                              self.product_reviews, self.raw_reviews)
             if lsh:
                 recommended_products = find_recommended_products_by_content_lsh(
                     user_id, self.content_feature_size, self.review_text_dict,
@@ -147,6 +154,7 @@ class SystemModule:
                     user_id, cosine_sim, self.product_reviews, self.num_recommend, threshold=0.1)
 
         print(recommended_products)
+        return recommended_products
 
     # predict the utility of one product to one user by selecting the algorithm
     # before calling the function, we have to call the set up function and input the same algorithm
@@ -180,6 +188,9 @@ class SystemModule:
                 return 0
             else:
                 return sum_weights / sum_similarity
+        elif algo == "content":
+            top_recom = self.find_recommended_products(user_id, "content", lsh=True)
+            print("top_recom",top_recom)
         return 0
 
 
@@ -210,11 +221,15 @@ if __name__ == '__main__':
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", hash_size=3, num_tables=5, eco=True)
+    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", hash_size=8, num_tables=2, eco=True)
     m.find_recommended_products("A2HOI48JK8838M", "user", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", hash_size=10, num_tables=3)
+    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", hash_size=20, num_tables=3)
     # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
+
+    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
+    # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
+    # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
 
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "user"))

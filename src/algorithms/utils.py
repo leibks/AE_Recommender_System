@@ -115,9 +115,10 @@ def calculate_estimate_rate(review_text_dict, given_item, sim_items, user_id, ut
 
 # estimate utilities of users rates to products
 # (these products are similar to rated products by users)
-def fill_estimated_rates(review_text_dict, feature_size, rated_products, utility_matrix, product_dic, user_dict, algo):
-    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=8, num_tables=3)
-    for user_id in rated_products.keys():
+def fill_estimated_rates(review_text_dict, feature_size, rated_products, utility_matrix, product_dic,
+                         user_dict, algo, hash_size, num_tables):
+    lsh_algo_item = LSH(review_text_dict, feature_size, hash_size=hash_size, num_tables=num_tables)
+    for user_id in tqdm(rated_products.keys(), desc="Estimate Utilities Loading ...."):
         rated_list = [i for i in rated_products[user_id]]
         for product_id in product_dic.keys():
             if algo == "user":
@@ -137,5 +138,3 @@ def fill_estimated_rates(review_text_dict, feature_size, rated_products, utility
                             review_text_dict, product_id, sim_items, user_id, utility_matrix,
                             product_dic, user_dict, algo)
                         rated_products[user_id].append(product_id)
-
-        # print(len(rated_products[user_id]))

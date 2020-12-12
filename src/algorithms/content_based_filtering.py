@@ -27,31 +27,18 @@ def process_price(price):
 
 # combine stock market data with reviews to do recommendation
 def comb_stock(raw_reviews, high_price, low_price):
-    # print("raw_reviews", raw_reviews)
-    # economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
-    # price_temp = raw_reviews.groupby("main_cat", as_index=False).mean()
-    # print("price_temp", price_temp)
-    # cat_avgprice = {}
-    # for i in range(len(price_temp)):
-    #     cat_avgprice[price_temp["main_cat"][i]] = price_temp["price"][i]
-
     for idx in tqdm(raw_reviews.index, desc="Combine Stock Loading ...."):
         price = clean_price(raw_reviews["price"][idx])
         stock_rate = raw_reviews["stockReturn"][idx]
         rate = raw_reviews["overall"][idx]
         economic_factor = get_economic_factor(stock_rate, price, rate, high_price, low_price)
         raw_reviews.loc[idx, "overall"] += economic_factor
-        
-        # cat = raw_reviews["main_cat"][idx]
-        # if not np.isnan(raw_reviews["price"][idx]):
-        #     new_rate = float(raw_reviews["stockReturn"][idx]) * (cat_avgprice[cat] - raw_reviews["price"][idx]) * 1000
-        # raw_reviews.loc[idx, "overall"] += new_rate
 
     return raw_reviews
 
 
 # Function that builds user profiles
-def build_user_profile(user, features, product_reviews, raw_reviews):
+def build_user_profile(user, feature_num, features, product_reviews, raw_reviews):
     # Construct a reverse map of product_indices and product asins
     product_indices = pd.Series(product_reviews.index, index=product_reviews['asin'])
 
@@ -62,26 +49,24 @@ def build_user_profile(user, features, product_reviews, raw_reviews):
     for i in range(len(temp)):
         user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
 
-    user_profile = []
+    user_profile = [0] * feature_num
     for idx in tqdm(raw_reviews.index, desc="Build User Profile Loading ...."):
         if raw_reviews["reviewerID"][idx] == user:
             asin = raw_reviews["asin"][idx]
             product_idx = product_indices[asin]
-            # +1.0 is becuase many users give 5.0 score, which will make the score weight becomes 0
+            # +1.0 is because many users give 5.0 score, which will make the score weight becomes 0
             score_weight = user_avgscore[user] - raw_reviews["overall"][idx] + 1.0
-            user_profile = (features[product_indices[asin]] * score_weight).tolist()
-            # user_matrix.append(features[product_indices[asin]] * score_weight)
+            temp = (features[product_indices[asin]] * score_weight).tolist()
+            for i in range(len(temp)):
+                user_profile[i] += temp[i]
 
-    # user_profiles_dict = {}
-    # for i in tqdm(range(len(user_matrix)), desc="Build User Profile Dict Loading ...."):
-    #     user_profiles_dict[raw_reviews["reviewerID"][i]] = user_matrix[i].tolist()
     return user_profile
 
 
 def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     X1 = vectorizer.fit_transform(product_reviews["reviewText"])
-    
+
     review_text = X1.toarray()  # shape=(21, 1200)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
@@ -113,16 +98,6 @@ def process_review_text(product_reviews):
 
 
 def build_initial_matrix(eco, raw_reviews, high_value, low_value):
-    # raw_reviews = pd.read_csv('resource\sample_data\joined_sample_electronics.csv')
-    
-    # for idx in tqdm(raw_reviews.index, desc="Clean Price Loading ...."):
-    #     raw_reviews.loc[idx, "price"] = process_price(raw_reviews["price"][idx])
-
-    # for idx in tqdm(raw_reviews.index, desc="Build Initial Matrix Loading ...."):
-    #     price = process_price(raw_reviews["price"][idx])
-    #     if eco == True:
-    #         raw_reviews = comb_stock(raw_reviews, high_value, low_value)
-
     # combine same product into one item reviews record
     product_reviews = raw_reviews.groupby("asin", as_index=False).agg(list).eval(
         "reviewText = reviewText.str.join(' ')")
