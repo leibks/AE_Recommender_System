@@ -1,4 +1,4 @@
-
+import math
 
 from src.algorithms.utils import (
     get_economic_factor,
@@ -23,12 +23,17 @@ def build_item_matrix(users, products):
 # utility (value) consider the rate from 0 to 5 and economic factor
 # , each row represent a product, and each column represent a user
 def build_item_utility_matrix(utility_matrix, df, user_dic, high_price, low_price, consider_economic=False):
+    test = []
     for index in tqdm(df.index, desc="Build Utility Matrix Loading ...."):
         user_id = df["reviewerID"][index]
         product_id = df["asin"][index]
         if product_id not in utility_matrix:
             continue
         rate = df["overall"][index]
+        if not isinstance(rate, float):
+            rate = float(rate)
+        # test.append(rate)
+        # print(f"user_id: {user_id}, product_id: {product_id}, rate: {rate}")
         # if the stock decreased and price of this product was high,
         # It means that the user really likes the product as it brings
         # higher utility on top of the price (economic) effect
@@ -120,11 +125,10 @@ def find_recommended_products_by_ii(user_id, utility_matrix, similarity_matrix, 
 
 
 # ==================================== LSH method to find similar items ====================================
-def find_recommended_products_by_ii_lsh(user_id, utility_matrix, similarity_matrix, user_dic, num_recommend):
+def find_recommended_products_by_ii_lsh(user_id, utility_matrix, lsh_algo, user_dic, num_recommend):
     # index of this user in every product's user list
     idx = user_dic[user_id]
     all_product_utilities = {}
-    lsh_algo = LSH(similarity_matrix, len(user_dic))
     for product_id in tqdm(utility_matrix.keys(), desc="Find Recommendation(LSH) Loading ...."):
         if utility_matrix[product_id][idx] == 0:
             similarity_dic = lsh_algo.build_similar_dict(product_id)

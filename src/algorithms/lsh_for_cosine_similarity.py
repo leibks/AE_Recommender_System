@@ -57,7 +57,7 @@ class HashTable:
 # (any item appears in any one of tables' similarity fetching can be regard as the similar item)
 class LSH:
 
-    def __init__(self, input_matrix, input_dim, hash_size=3, num_tables=3, random_type="gau"):
+    def __init__(self, input_matrix, input_dim, hash_size=1, num_tables=3, random_type="gau"):
         self.input_matrix = input_matrix
         self.num_tables = num_tables
         self.hash_size = hash_size
@@ -88,11 +88,10 @@ class LSH:
     # find items that locate in the big clusters (it shares the same hash value with many items)
     def find_big_clusters_items(self):
         return_items = set()
-        total_items = len(self.input_matrix)
-
         for ht in self.hash_tables:
             similar_res = sorted(ht.hash_table.items(), key=lambda item: len(item[1]), reverse=True)
-            similar_res = similar_res[:int(total_items * 0.5)]
+            total_items = len(ht.hash_table)
+            similar_res = similar_res[:int(total_items * 0.2)]
             for i in tqdm(similar_res, desc="Find Big Cluster's Item Loading ...."):
-                return_items.update(i[0])
+                return_items.update(i[1])
         return return_items
