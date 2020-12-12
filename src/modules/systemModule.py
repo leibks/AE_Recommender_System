@@ -205,11 +205,11 @@ if __name__ == '__main__':
     #     print(i, m.predict_utility(v[0], v[1], "item"))
     #Test['Predict'] = user_predict
 
-    # m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
-    # m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/fashion.csv", "content")
+    m.find_recommended_products("A1UVZHFDTI4FPK", "content", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "user", reduce=True)
-    m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "user", reduce=True)
+    # m.find_recommended_products("A2EM03F99X3RJZ", "user", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/beauty.csv", "item", reduce=False)
     # print(m.predict_utility("A3Z74TDRGD0HU", "B00004U9V2", "item"))
