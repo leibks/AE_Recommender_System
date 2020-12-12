@@ -5,6 +5,8 @@ from sklearn.metrics.pairwise import cosine_similarity
 import nltk
 from nltk.corpus import stopwords
 nltk.download('stopwords')
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 from src.algorithms.lsh_for_cosine_similarity import *
 from tqdm import *
 from src.algorithms.utils import (
@@ -69,12 +71,12 @@ def review_text_tfidf(product_reviews):
     vectorizer = TfidfVectorizer(stop_words='english')
     tfidf_review = vectorizer.fit_transform(product_reviews["reviewText"])
     
-    review_text = tfidf_review.toarray()  # shape=(21, 1200)
+    review_text = tfidf_review.toarray()  # shape=(product number, feature number)
     # key: product_asin, value: list of features (words)
     review_text_dict = {}
     for i in range(len(review_text)):
         review_text_dict[product_reviews["asin"][i]] = review_text[i]
-    # print(tfidf_review.shape)  # (21, 1200)
+
     return review_text_dict, review_text, tfidf_review, tfidf_review.shape[1]
 
 
@@ -90,9 +92,12 @@ def process_review_text(product_reviews):
     # for i in range(len(product_reviews["reviewText"])):
         sen = []
         review = product_reviews["reviewText"][i]
-        # print("reviewText", product_reviews["reviewText"][i])
+        is_noun = lambda pos: pos[:2] == 'NN'
+
         if not pd.isnull(review):
-            words = review.split()
+            tokenized = nltk.word_tokenize(review)
+            words = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)]
+            # words = cleaned_review.split()
             for w in words:
                 if w not in en_stops:
                     sen.append(sno.stem(w))
