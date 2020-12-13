@@ -194,9 +194,6 @@ class SystemModule:
                 return 0
             else:
                 return sum_weights / sum_similarity
-        elif algo == "content":
-            top_recom = self.find_recommended_products(user_id, "content", lsh=True)
-            print("top_recom",top_recom)
         return 0
 
 
@@ -231,11 +228,14 @@ if __name__ == '__main__':
     #                 hash_size=8, num_tables=2, eco=True)
     # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
-    m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
+    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/fashion_stock.csv", "content", reduce=False)
-    # m.find_recommended_products("AUE82PKEUMKZB", "content", lsh=True)
+    # m.set_up_matrix("resource\cleaned_data\AMAZON_FASHION_stock.csv", "content", reduce=False)
+    # m.find_recommended_products("A276HQXYS553QW", "content", lsh=True)
+
+    m.set_up_matrix("resource\cleaned_data\Luxury_Beauty_stock.csv", "content", reduce=False, hash_size=2, num_tables=3)
+    m.find_recommended_products("A3VXLOGI23ZHHX", "content", lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
     # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
