@@ -172,7 +172,6 @@ class SystemModule:
             sum_similarity = 0
             for sim_user in similarity_dic.keys():
                 sim_val = similarity_dic[sim_user]
-                print(len(self.user_utility_matrix[sim_user]))
                 utility = self.user_utility_matrix[sim_user][self.product_dict[product_id]]
                 sum_weights += sim_val * utility
                 sum_similarity += sim_val
@@ -194,52 +193,44 @@ class SystemModule:
                 return 0
             else:
                 return sum_weights / sum_similarity
-        elif algo == "content":
-            top_recom = self.find_recommended_products(user_id, "content", lsh=True)
-            print("top_recom",top_recom)
+        # elif algo == "content":
+        #     top_recommend = self.find_recommended_products(user_id, "content", lsh=True)
+        #     print("top_recommendations", top_recommend)
         return 0
 
 
 # Sort data by Date
-# beauty = pd.read_csv('resource/cleaned_data/beauty_demo.csv')
-# beauty = beauty.sort_values(by=['Date'])
-# beauty = beauty[beauty['overall']!= 0]
-# Test = beauty[['overall', 'reviewerID', 'asin']].iloc[-300:].reset_index(drop=True)
-# reviewer = [i for i in Test.reviewerID]
-# product = [i for i in Test.asin]
-# pair = list(zip(reviewer, product))
-# user_predict = []
+beauty = pd.read_csv('resource/cleaned_data/Luxury_Beauty_stock.csv')
+beauty = beauty.sort_values(by=['Date'])
+beauty = beauty[beauty['overall'] != 0]
+Test = beauty[['overall', 'reviewerID', 'asin']].iloc[-300:].reset_index(drop=True)
+reviewer = [i for i in Test.reviewerID]
+product = [i for i in Test.asin]
+pair = list(zip(reviewer, product))
+user_predict = []
 
 
 if __name__ == '__main__':
     m = SystemModule()
 
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "item", reduce=False, eco=False)
-    # print(len(m.user_utility_matrix))
-    # print(m.user_utility_matrix["A3CW2TFAZZMQ2I"])
-    # print(m.user_utility_matrix)
+    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False, hash_size=8, num_tables=2)
     # for i, v in enumerate(pair):
     #     print(v[0])
-    #     user_predict.append(m.predict_utility(v[0], v[1], "item"))
-    #     print(i, m.predict_utility(v[0], v[1], "item"))
+    #     user_predict.append(m.predict_utility(v[0], v[1], "user"))
+    #     print(i, m.predict_utility(v[0], v[1], "user"))
     # Test['Predict'] = user_predict
+    # Test.to_csv("resource/cleaned_data/Beauty_Result.csv", index=False)
 
-    # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
-    # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
+    # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "content", reduce=False,
+    #                 hash_size=2, num_tables=3)
+    # m.find_recommended_products("A3QY3THQ42WSCQ", "content", lsh=True)
 
-    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
-    #                 hash_size=8, num_tables=2, eco=True)
-    # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
+    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
+                    hash_size=8, num_tables=2, eco=True)
+    m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
-    m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
-
-    # m.set_up_matrix("resource/cleaned_data/fashion_stock.csv", "content", reduce=False)
-    # m.find_recommended_products("AUE82PKEUMKZB", "content", lsh=True)
-
-    # m.set_up_matrix("resource/cleaned_data/beauty_demo.csv", "content", reduce=False)
-    # # m.find_recommended_products("A2EM03F99X3RJZ", "content", lsh=True)
-    # m.predict_utility("A2EM03F99X3RJZ", "B00004U9V2", "content")
+    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
+    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
 
     # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
     # # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "user"))

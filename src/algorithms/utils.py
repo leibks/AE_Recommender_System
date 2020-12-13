@@ -16,8 +16,6 @@ def fetch_users_products(df):
 
 
 def build_dictionary(users, products):
-    # if the algo is user-user, dic is the product dictionary
-    # if the algo is item-item, dic is the user dictionary
     user_dic = {}
     product_dic = {}
     # set up related dictionary
