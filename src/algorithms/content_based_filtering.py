@@ -50,7 +50,6 @@ def build_user_profile(user, feature_num, features, product_reviews, raw_reviews
 
     # compute the average scores that users give products they bought
     temp = raw_reviews.groupby("reviewerID", as_index=False).mean()
-    # print("temp", temp)
     user_avgscore = {}
     for i in range(len(temp)):
         user_avgscore[temp["reviewerID"][i]] = temp["overall"][i]
@@ -91,7 +90,6 @@ def process_review_text(product_reviews):
 
     en_stops = set(stopwords.words('english'))
     for i in tqdm(range(len(product_reviews["reviewText"])), desc="Process Review Text ...."):
-        # for i in range(len(product_reviews["reviewText"])):
         sen = []
         review = product_reviews["reviewText"][i]
         is_noun = lambda pos: pos[:2] == 'NN'
@@ -99,7 +97,6 @@ def process_review_text(product_reviews):
         if not pd.isnull(review):
             tokenized = nltk.word_tokenize(review)
             words = [word for (word, pos) in nltk.pos_tag(tokenized) if is_noun(pos)]
-            # words = cleaned_review.split()
             for w in words:
                 if w not in en_stops:
                     sen.append(sno.stem(w))
@@ -131,19 +128,15 @@ def comp_cosine_similarity(user_profiles, X1, col, idx):
     cosine_sim = pd.DataFrame(cosine_sim)
     cosine_sim.columns = col
     cosine_sim.index = idx
-    # print(cosine_sim)
     return cosine_sim
 
 
 # Function that takes in product title as input and outputs most similar products
 def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend):
     products = cosine_sim.loc[reviewerID, :]
-    # print(products)
     products_value = products.values
-    # print(type(products_value))
     sorted_product = -np.sort(-products_value)
     sorted_index = np.argsort(-products_value)
-    # print(sorted_product, sorted_index)
 
     # Get the scores of the 10 most similar products, and the result must larger than the threshold
     res_scores = []
@@ -157,7 +150,6 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 
     return recommend_products
 
-
 # ==================================== Normal method to find similar items =================================
 
 
@@ -165,10 +157,8 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 def find_recommended_products_by_content_lsh(user_name, FEATURES_NUM, review_text_dict, user_features, num_recommend):
     all_product_utilities = {}
     review_text_dict[user_name] = np.array(user_features)
-    # print("review_text_dict", review_text_dict, len(review_text_dict.keys()))
     lsh_algo = LSH(review_text_dict, FEATURES_NUM)
     similarity_dic = lsh_algo.build_similar_dict(user_name)
-    # print("similarity_dic", similarity_dic)
     sorted_similarity_dict = {k: v for k, v in sorted(similarity_dic.items(), key=lambda item: item[1], reverse=True)}
 
     recommended_product = []
