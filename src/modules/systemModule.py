@@ -2,15 +2,14 @@ import argparse
 import platform
 import os
 import sys
+path = os.getcwd()
+sys.path.append(path)
+print("Current working path:", path)
 from src.algorithms.user_user_collaborative_filtering import *
 from src.algorithms.item_item_collaborative_filtering import *
 from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
 from src.performance.statistics import *
-path = os.getcwd()
-sys.path.append(path)
-
-print("Current working path:", path)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -127,10 +126,6 @@ class SystemModule:
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
-        if user_id not in self.user_ids:
-            # we have removed this user from the matrix reduce function
-            # so, we have to use the content-based algo
-            algo = "content"
         recommended_products = []
         if algo == "user":
             if lsh:
@@ -224,7 +219,7 @@ if __name__ == '__main__':
 
     m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
                     hash_size=8, num_tables=2, eco=True)
-    m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
+    m.find_recommended_products("A2HOI48JK8838M", "item", lsh=False)
 
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)

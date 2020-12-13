@@ -162,7 +162,7 @@ def find_recommended_products_by_uu_lsh(user_id, utility_matrix, lsh_algo, produ
     for i in sort_products:
         print(i)
         recommended_product.append(i[0])
-        if len(recommended_product) > num_recommend:
+        if len(recommended_product) >= num_recommend:
             break
 
     return recommended_product
