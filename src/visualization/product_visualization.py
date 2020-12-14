@@ -9,12 +9,12 @@ from src.modules import *
 
 
 if __name__ == "__main__":
-    m = SystemModule()
+    m = RMSystemModel()
 
     # set up the original testing data
     beauty = pd.read_csv("resource/cleaned_data/Luxury_Beauty_stock.csv")
     toy = pd.read_csv("resource/cleaned_data/Toys_&_Games_stock.csv")
-    fashion = pd.read_csv("resource/cleaned_data/AMAZON_FASHION_stock.csv")
+    fashion = pd.read_csv("resource/cleaned_data/amazon_fashion_stock.csv")
 
     beauty_item = pd.read_csv("resource/performance_test_data/Beauty_Item_P.csv")
     beauty_user = pd.read_csv("resource/performance_test_data/Beauty_User_P.csv")

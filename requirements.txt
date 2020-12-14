@@ -6,3 +6,4 @@ requests==2.25.0
 datasketch==1.5.1
 tqdm==4.54.1
 scikit-learn==0.23.2
+matplotlib==3.3.3

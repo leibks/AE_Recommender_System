@@ -2,7 +2,7 @@ import os
 import sys
 path = os.getcwd()
 sys.path.append(path)
-from src.modules.systemModule import *
+from src.modules.RMSystemModel import *
 import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -18,13 +18,13 @@ args = parser.parse_args()
 
 if __name__ == '__main__':
     file_name = "resource/cleaned_data/Luxury_Beauty_stock.csv"
-    user_id = args.USER # A2HOI48JK8838M
+    user_id = args.USER  # A2HOI48JK8838M
     algo = args.ALGO
     eco = True if args.ECO == "True" else False
     do_lsh = True if args.LSH == "True" else False
     reduce = True if args.REDUCE == "True" else False
     print([user_id, algo, eco, do_lsh, reduce])
-    m = SystemModule()
+    m = RMSystemModel()
     m.set_up_matrix(file_name, algo=algo, reduce=reduce, hash_size=8, num_tables=2, eco=eco)
     # print(m.predict_utility("A2HOI48JK8838M", "B00004U9V2", algo, lsh=False))
     res = m.find_recommended_products(user_id, algo=algo, do_lsh=do_lsh)

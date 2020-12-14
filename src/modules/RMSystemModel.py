@@ -1,5 +1,6 @@
 import os
 import sys
+import numpy as np
 path = os.getcwd()
 sys.path.append(path)
 print("Current working path:", path)
@@ -10,12 +11,12 @@ from src.algorithms.utils import *
 from src.performance.statistics import *
 
 
-# Recommender System Module: build required matrix based on dataset and
+# Recommender System Model: build required matrix based on dataset and
 # select different algorithms to find the recommended products by giving
 # any user id.
 # (1) data will be imported from the given file
 # (2) different algorithms need different matrix structures
-class SystemModule:
+class RMSystemModel:
 
     def __init__(self, num_recommend=10, high_rate=0.9, low_rate=0.1):
         self.num_recommend = num_recommend
@@ -146,82 +147,38 @@ class SystemModule:
     # predict the utility of one product to one user by selecting the algorithm
     # before calling the function, we have to call the set up function and input the same algorithm
     def predict_utility(self, user_id, product_id, algo, do_lsh=True):
+        res_utility = 0
         if algo == "user":
             if not do_lsh:
                 similar_users = find_similar_users(user_id, self.user_sim_matrix)
-                return predict_single_product_utility_uu(self.user_utility_matrix,
-                                                         similar_users, product_id, self.product_dict)
+                res_utility = predict_single_product_utility_uu(self.user_utility_matrix,
+                                                                similar_users, product_id, self.product_dict)
             else:
-                return predict_single_product_utility_uu_lsh(
+                res_utility = predict_single_product_utility_uu_lsh(
                     self.lsh, self.user_utility_matrix, self.product_dict, user_id, product_id)
 
         elif algo == "item":
             if not do_lsh:
-                return predict_single_product_utility_ii(self.product_utility_matrix, self.product_sim_matrix,
-                                                         user_id, self.user_dict, product_id)
+                res_utility = predict_single_product_utility_ii(self.product_utility_matrix, self.product_sim_matrix,
+                                                                user_id, self.user_dict, product_id)
             else:
-                return predict_single_product_utility_ii_lsh(
+                res_utility = predict_single_product_utility_ii_lsh(
                     self.lsh, self.product_utility_matrix, self.user_dict, product_id, user_id)
-        return 0
-
-
-# # Sort data by Date
-# beauty = pd.read_csv('resource/cleaned_data/Luxury_Beauty_stock.csv')
-# # beauty = beauty.sort_values(by=['Date'])
-# # beauty = beauty[beauty['overall'] != 0]
-# Test = beauty[['overall', 'reviewerID', 'asin']].iloc[-300:].reset_index(drop=True)
-# reviewer = [i for i in Test.reviewerID]
-# product = [i for i in Test.asin]
-# pair = list(zip(reviewer, product))
-# user_predict = []
+        # if predicted utility is 0, we get the mean from all rated products by this user
+        if res_utility == 0:
+            sum_ratings = 0
+            for p_id in self.rated_products[user_id]:
+                if algo == "user":
+                    sum_ratings += self.user_utility_matrix[user_id][self.product_dict[p_id]]
+                elif algo == "item":
+                    sum_ratings += self.product_utility_matrix[p_id][self.user_dict[user_id]]
+            res_utility = sum_ratings / len(self.rated_products[user_id])
+        return res_utility
 
 
 if __name__ == '__main__':
-    m = SystemModule()
-
-    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False, hash_size=8, num_tables=2)
-    # for i, v in enumerate(pair):
-    #     print(v[0])
-    #     user_predict.append(m.predict_utility(v[0], v[1], "user"))
-    #     print(i, m.predict_utility(v[0], v[1], "user"))
-    # Test['Predict'] = user_predict
-    # Test.to_csv("resource/cleaned_data/Beauty_Result.csv", index=False)
-
-    # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "content", reduce=False,
-    #                 hash_size=2, num_tables=3)
-    # m.find_recommended_products("A3QY3THQ42WSCQ", "content", lsh=True)
-
+    # simple test case
+    m = RMSystemModel()
     m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False,
                     hash_size=8, num_tables=2, eco=True)
-    # print(m.predict_utility("A2HOI48JK8838M", "B00004U9V2", "content", lsh=False))
     res = m.find_recommended_products("A2HOI48JK8838M", "user", do_lsh=True)
-    # asin = list(beauty.asin)
-    # title = list(beauty.title)
-    # L = len(asin)
-    # product_dict = {asin[i]: title[i] for i in range(L)}
-    # for i in res:
-    #     print(type(i))
-    #     print(product_dict[i])
-
-    # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
-    # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
-
-    # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
-    #                 hash_size=8, num_tables=2, eco=True)
-    # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
-
-    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
-    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
-
-    # m.set_up_matrix("resource\cleaned_data\AMAZON_FASHION_stock.csv", "content", reduce=False)
-    # m.find_recommended_products("A276HQXYS553QW", "content", lsh=True)
-
-    # m.set_up_matrix("resource\cleaned_data\Luxury_Beauty_stock.csv", "content", reduce=False, hash_size=2, num_tables=3)
-    # m.find_recommended_products("A3VXLOGI23ZHHX", "content", lsh=True)
-
-    # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
-    # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
-
-    # m.set_up_matrix("resource/sample_data/joined_sample_electronics.csv", "item", reduce=False)
-    # # print(m.predict_utility("A3G5NNV6T6JA8J", "106171327X", "user"))
-    # m.find_recommended_products("A3G5NNV6T6JA8J", "item", lsh=True)
