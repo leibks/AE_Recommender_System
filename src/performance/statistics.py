@@ -1,3 +1,8 @@
+import os
+import sys
+path = os.getcwd()
+sys.path.append(path)
+
 
 def calculate_filled_utilities(rated_products, product_num):
     count_size = 0

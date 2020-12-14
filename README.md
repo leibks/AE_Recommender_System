@@ -34,9 +34,9 @@ Without working directory input parameter, the script will download all raw data
 
 ## Test Sample
   under the AE_Recommender_System:
-  * run command `python src/modules/systemModule.py` to test different algorithms
+  * run command `python src/main.py` to test different algorithms
   * required arguments (above three):
-    * --USER USER                 (the user who is recommended, eg: Tazman32)
+    * --USER USER                 (the user who is recommended, eg: A2HOI48JK8838M)
   * optional arguments (above three):
     * -h, --help                  (show this help message and exit)
     * --TOP_ITEM TOP_ITEM         (how many items provided for recommendation)
