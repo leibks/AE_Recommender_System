@@ -1,5 +1,4 @@
 import math
-
 from src.algorithms.utils import (
     get_economic_factor,
     clean_price
@@ -88,7 +87,7 @@ def find_similar_items(product_id, similarity_matrix):
     return similar_res
 
 
-def predict_single_product_utility(utility_matrix, similarity_matrix, user_id, user_dic, product_id):
+def predict_single_product_utility_ii(utility_matrix, similarity_matrix, user_id, user_dic, product_id):
     similar_products = find_similar_items(product_id, similarity_matrix)
     # ∑_(𝒋∈𝑵(𝒊;𝒙))〖𝒔_𝒊𝒋⋅𝒓_𝒋𝒙 〗, i is the predicted product,
     # x is the predicted user, j is similar product
@@ -112,7 +111,7 @@ def find_recommended_products_by_ii(user_id, utility_matrix, similarity_matrix, 
     for product_id in tqdm(similarity_matrix.keys(), desc="Find Recommendation Loading ...."):
         if utility_matrix[product_id][idx] == 0:
             utility_matrix[product_id][idx] = \
-                predict_single_product_utility(utility_matrix, similarity_matrix, user_id, user_dic, product_id)
+                predict_single_product_utility_ii(utility_matrix, similarity_matrix, user_id, user_dic, product_id)
 
         all_product_utilities[product_id] = utility_matrix[product_id][idx]
 
@@ -165,4 +164,20 @@ def find_recommended_products_by_ii_lsh(user_id, utility_matrix, lsh_algo, user_
             break
 
     return recommended_product
+
+
+def predict_single_product_utility_ii_lsh(lsh, product_utility_matrix, user_dict, product_id, user_id):
+    lsh_algo = lsh
+    similarity_dic = lsh_algo.build_similar_dict(product_id)
+    sum_weights = 0
+    sum_similarity = 0
+    for sim_item in similarity_dic.keys():
+        sim_val = similarity_dic[sim_item]
+        utility = product_utility_matrix[sim_item][user_dict[user_id]]
+        sum_weights += sim_val * utility
+        sum_similarity += sim_val
+    if sum_similarity == 0:
+        return 0
+    else:
+        return sum_weights / sum_similarity
 # ==================================== LSH method to find similar items ====================================

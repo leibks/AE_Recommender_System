@@ -2,15 +2,14 @@ import argparse
 import platform
 import os
 import sys
+path = os.getcwd()
+sys.path.append(path)
+print("Current working path:", path)
 from src.algorithms.user_user_collaborative_filtering import *
 from src.algorithms.item_item_collaborative_filtering import *
 from src.algorithms.content_based_filtering import *
 from src.algorithms.utils import *
 from src.performance.statistics import *
-path = os.getcwd()
-sys.path.append(path)
-
-print("Current working path:", path)
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--USER", type=str, default=False, help="the user who is recommended")
@@ -127,10 +126,6 @@ class SystemModule:
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, lsh):
-        if user_id not in self.user_ids:
-            # we have removed this user from the matrix reduce function
-            # so, we have to use the content-based algo
-            algo = "content"
         recommended_products = []
         if algo == "user":
             if lsh:
@@ -162,35 +157,23 @@ class SystemModule:
 
     # predict the utility of one product to one user by selecting the algorithm
     # before calling the function, we have to call the set up function and input the same algorithm
-    def predict_utility(self, user_id, product_id, algo):
+    def predict_utility(self, user_id, product_id, algo, lsh=True):
         if algo == "user":
-            lsh_algo = self.lsh
-            similarity_dic = lsh_algo.build_similar_dict(user_id)
-            sum_weights = 0
-            sum_similarity = 0
-            for sim_user in similarity_dic.keys():
-                sim_val = similarity_dic[sim_user]
-                utility = self.user_utility_matrix[sim_user][self.product_dict[product_id]]
-                sum_weights += sim_val * utility
-                sum_similarity += sim_val
-            if sum_similarity == 0:
-                return 0
+            if not lsh:
+                similar_users = find_similar_users(user_id, self.user_sim_matrix)
+                return predict_single_product_utility_uu(self.user_utility_matrix,
+                                                         similar_users, product_id, self.product_dict)
             else:
-                return sum_weights / sum_similarity
+                return predict_single_product_utility_uu_lsh(
+                    self.lsh, self.user_utility_matrix, self.product_dict, user_id, product_id)
+
         elif algo == "item":
-            lsh_algo = self.lsh
-            similarity_dic = lsh_algo.build_similar_dict(product_id)
-            sum_weights = 0
-            sum_similarity = 0
-            for sim_item in similarity_dic.keys():
-                sim_val = similarity_dic[sim_item]
-                utility = self.product_utility_matrix[sim_item][self.user_dict[user_id]]
-                sum_weights += sim_val * utility
-                sum_similarity += sim_val
-            if sum_similarity == 0:
-                return 0
+            if not lsh:
+                return predict_single_product_utility_ii(self.product_utility_matrix, self.product_sim_matrix,
+                                                         user_id, self.user_dict, product_id)
             else:
-                return sum_weights / sum_similarity
+                return predict_single_product_utility_ii_lsh(
+                    self.lsh, self.product_utility_matrix, self.user_dict, product_id, user_id)
         return 0
 
 
@@ -222,7 +205,8 @@ if __name__ == '__main__':
 
     m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
                     hash_size=8, num_tables=2, eco=True)
-    m.find_recommended_products("A2HOI48JK8838M", "item", lsh=True)
+    print(m.predict_utility("A2HOI48JK8838M", "B00004U9V2", "item"))
+    # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=False)
 
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
@@ -239,7 +223,6 @@ if __name__ == '__main__':
 
     # m.set_up_matrix("resource\cleaned_data\Luxury_Beauty_stock.csv", "content", reduce=False, hash_size=2, num_tables=3)
     # m.find_recommended_products("A3VXLOGI23ZHHX", "content", lsh=True)
-
 
     # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
     # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
