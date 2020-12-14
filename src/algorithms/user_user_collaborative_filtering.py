@@ -165,4 +165,20 @@ def find_recommended_products_by_uu_lsh(user_id, utility_matrix, lsh_algo, produ
             break
 
     return recommended_product
+
+
+def predict_single_product_utility_uu_lsh(lsh, user_utility_matrix, product_dict, user_id, product_id):
+    lsh_algo = lsh
+    similarity_dic = lsh_algo.build_similar_dict(user_id)
+    sum_weights = 0
+    sum_similarity = 0
+    for sim_user in similarity_dic.keys():
+        sim_val = similarity_dic[sim_user]
+        utility = user_utility_matrix[sim_user][product_dict[product_id]]
+        sum_weights += sim_val * utility
+        sum_similarity += sim_val
+    if sum_similarity == 0:
+        return 0
+    else:
+        return sum_weights / sum_similarity
 # ==================================== LSH method to find similar items ====================================
