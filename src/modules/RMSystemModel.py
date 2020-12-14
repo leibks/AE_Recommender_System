@@ -176,9 +176,9 @@ class RMSystemModel:
         return res_utility
 
 
-if __name__ == '__main__':
-    # simple test case
-    m = RMSystemModel()
-    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False,
-                    hash_size=8, num_tables=2, eco=True)
-    res = m.find_recommended_products("A2HOI48JK8838M", "user", do_lsh=True)
+# if __name__ == '__main__':
+#     # simple test case
+#     m = RMSystemModel()
+#     m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False,
+#                     hash_size=8, num_tables=2, eco=True)
+#     res = m.find_recommended_products("A2HOI48JK8838M", "user", do_lsh=True)
