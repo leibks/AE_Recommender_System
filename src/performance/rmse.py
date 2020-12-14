@@ -3,7 +3,7 @@ import sys
 path = os.getcwd()
 sys.path.append(path)
 from src.modules import *
-
+from sklearn.metrics import mean_squared_error
 
 if __name__ == '__main__':
     m = SystemModule()
@@ -34,10 +34,10 @@ if __name__ == '__main__':
         pair = list(zip(reviewer, product))
 
         for i, v in enumerate(pair):
-            if v[1] in m.product_dict:
-                p = m.predict_utility(v[0], v[1], mode)
-                print(p)
-                predict.append(p)
+            #if v[1] in m.product_dict:
+            p = m.predict_utility(v[0], v[1], mode)
+            print(p)
+            predict.append(p)
 
         test['Predict'] = predict
         # save the performance result
@@ -51,27 +51,37 @@ if __name__ == '__main__':
     RMSE = []
     none0rate = []
 
-    tests = [beauty_test, beauty_test, fashion_test, fashion_test, toy_test, toy_test]
+    tests = [beauty_test, beauty_test, fashion_test, fashion_test, toy_test, toy_test,
+             beauty_test, beauty_test, fashion_test, fashion_test, toy_test, toy_test]
     paths = ["resource/cleaned_data/Performance_Beauty_Item.csv",
             "resource/cleaned_data/Performance_Beauty_User.csv",
             "resource/cleaned_data/Performance_Fashion_Item.csv",
             "resource/cleaned_data/Performance_Fashion_User.csv",
             "resource/cleaned_data/Performance_Toy_Item.csv",
-            "resource/cleaned_data/Performance_Toy_User.csv"]
-    modes = ["item", "user", "item", "user", "item", "user"]
-    names = ["beauty_item", "beauty_user", "fashion_item", "fashion_user", "toy_user", "toy_item"]
+            "resource/cleaned_data/Performance_Toy_User.csv",
+            "resource/cleaned_data/Performance_Beauty_Item_NECO.csv",
+            "resource/cleaned_data/Performance_Beauty_User_NECO.csv",
+            "resource/cleaned_data/Performance_Fashion_Item_NECO.csv",
+            "resource/cleaned_data/Performance_Fashion_User_NECO.csv",
+            "resource/cleaned_data/Performance_Toy_Item_NECO.csv",
+            "resource/cleaned_data/Performance_Toy_User_NECO.csv",
+            ]
+    modes = ["item", "user", "item", "user", "item", "user", "item", "user", "item", "user", "item", "user"]
+    names = ["beauty_item", "beauty_user", "fashion_item", "fashion_user", "toy_user", "toy_item",
+             "beauty_item_NECO", "beauty_user_NECO", "fashion_item_NECO", "fashion_user_NECO", "toy_user_NECO", "toy_item_NECO"]
     res_paths = ["resource/cleaned_data/RMSE_Beauty_Item.csv",
              "resource/cleaned_data/RMSE_Beauty_User.csv",
              "resource/cleaned_data/RMSE_Fashion_Item.csv",
              "resource/cleaned_data/RMSE_Fashion_User.csv",
              "resource/cleaned_data/RMSE_Toy_Item.csv",
-             "resource/cleaned_data/RMSE_Toy_User.csv"]
-    r, n = run_file(tests[0], modes[0], paths[0])
-    # r, n = run_file(tests[1], modes[1], paths[1])
-    # r, n = run_file(tests[2], modes[2], paths[2])
-    # r, n = run_file(tests[3], modes[3], paths[3])
-    # r, n = run_file(tests[4], modes[4], paths[4])
-    # r, n = run_file(tests[5], modes[5], paths[5])
+             "resource/cleaned_data/RMSE_Toy_User.csv",
+             "resource/cleaned_data/RMSE_Beauty_Item_NECO.csv",
+             "resource/cleaned_data/RMSE_Beauty_User_NECO.csv",
+             "resource/cleaned_data/RMSE_Fashion_Item_NECO.csv",
+             "resource/cleaned_data/RMSE_Fashion_User_NECO.csv",
+             "resource/cleaned_data/RMSE_Toy_Item_NECO.csv",
+             "resource/cleaned_data/RMSE_Toy_User_NECO.csv"]
+
 
     def res_export(i):
         r, n = run_file(tests[i], modes[i], paths[i])
@@ -88,5 +98,9 @@ if __name__ == '__main__':
     # res_export(3)
     # res_export(4)
     # res_export(5)
-
-
+    # res_export(6)
+    # res_export(7)
+    # res_export(8)
+    # res_export(9)
+    # res_export(10)
+    # res_export(11)
