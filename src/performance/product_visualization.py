@@ -36,7 +36,6 @@ if __name__ == '__main__':
         for j in i.split(",")[:-2]:
             if len(j) == 10:
                 temp.append(product_dict[j])
-        #products.append([product_dict[j] for j in i.split(",")[:-2]])
         products.append(temp)
         
     Res = {}
@@ -47,6 +46,9 @@ if __name__ == '__main__':
                 Res[k] += v
             else:
                 Res[k] = v
+    
+    # sort dict by descending order
+    Res = dict(sorted(Res.items(), key=lambda item: item[1], reverse=True))
     
     if len(Res) <= 10:
         plt.bar(range(len(Res)), Res.values(), color='g')
