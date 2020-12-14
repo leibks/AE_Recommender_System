@@ -137,10 +137,8 @@ class SystemModule:
                     user_id, self.content_feature_size, self.review_text_dict,
                     user_profile, self.num_recommend)
             else:
-                cosine_sim = comp_cosine_similarity(user_profile, self.tfidf_review,
-                                                    self.product_reviews["asin"], self.raw_reviews["reviewerID"])
                 recommended_products = find_recommended_products_by_content(
-                    user_id, cosine_sim, self.product_reviews, self.num_recommend)
+                    user_profile, self.tfidf_review, self.product_reviews, self.num_recommend)
 
         print(recommended_products)
         return recommended_products
