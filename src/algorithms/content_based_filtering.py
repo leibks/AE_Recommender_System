@@ -122,19 +122,11 @@ def build_initial_matrix(eco, raw_reviews, high_value, low_value):
 
 
 # ==================================== Normal method to find similar items =================================
-# Compute the cosine similarity matrix
-def comp_cosine_similarity(user_profiles, X1, col, idx):
-    cosine_sim = cosine_similarity(user_profiles, X1)
-    cosine_sim = pd.DataFrame(cosine_sim)
-    cosine_sim.columns = col
-    cosine_sim.index = idx
-    return cosine_sim
-
 
 # Function that takes in product title as input and outputs most similar products
-def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews, num_recommend):
-    products = cosine_sim.loc[reviewerID, :]
-    products_value = products.values
+def find_recommended_products_by_content(user_profile, X1, product_reviews, num_recommend):
+    user_profile = np.array(user_profile).reshape(1, -1)
+    products_value = cosine_similarity(user_profile, X1)[0]
     sorted_product = -np.sort(-products_value)
     sorted_index = np.argsort(-products_value)
 
@@ -145,7 +137,7 @@ def find_recommended_products_by_content(reviewerID, cosine_sim, product_reviews
 
     recommend_products = []
     for i, idx in enumerate(res_scores):
-        print(product_reviews["asin"][idx], sorted_product[i + 1])
+        print(i, product_reviews["asin"][idx], sorted_product[i])
         recommend_products.append(product_reviews["asin"][idx])
 
     return recommend_products
