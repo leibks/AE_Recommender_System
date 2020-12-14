@@ -2,7 +2,6 @@ from tqdm import *
 import numpy as np
 import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
-
 from src.algorithms.utils import (
     get_economic_factor,
     clean_price
@@ -88,7 +87,7 @@ def find_similar_users(user_id, similarity_matrix):
     return similar_res
 
 
-def predict_single_product_utility(utility_matrix, similar_res, product_id, product_dic):
+def predict_single_product_utility_uu(utility_matrix, similar_res, product_id, product_dic):
     # ∑_(𝑦∈𝑁)〖𝑠_𝑥𝑦⋅𝑟_𝑦𝑖 〗, i is the product,
     # y is every similar user, x is the predicted user
     sum_weights = 0
@@ -114,7 +113,7 @@ def find_recommended_products_by_uu(user_id, utility_matrix, similarity_matrix, 
         idx = product_dic[product_id]
         if utility_matrix[user_id][idx] == 0:
             utility_matrix[user_id][idx] \
-                = predict_single_product_utility(utility_matrix, similar_users, product_id, product_dic)
+                = predict_single_product_utility_uu(utility_matrix, similar_users, product_id, product_dic)
 
         all_product_utilities[product_id] = utility_matrix[user_id][idx]
 

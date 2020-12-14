@@ -15,7 +15,7 @@ if __name__ == '__main__':
     beauty_test = beauty[['overall', 'reviewerID', 'asin']].iloc[-100:].reset_index(drop=True)
 
     toy = toy.sort_values(by=['Date'])
-    toy = toy[toy['overall']!= 0]
+    toy = toy[toy['overall'] != 0]
     fashion = fashion.sort_values(by=['Date'])
     fashion = fashion[toy['overall'] != 0]
     toy_test = toy[['overall', 'reviewerID', 'asin']].iloc[-1000:].reset_index(drop=True)

@@ -159,8 +159,12 @@ class SystemModule:
 
     # predict the utility of one product to one user by selecting the algorithm
     # before calling the function, we have to call the set up function and input the same algorithm
-    def predict_utility(self, user_id, product_id, algo):
+    def predict_utility(self, user_id, product_id, algo, lsh=True):
         if algo == "user":
+            if not lsh:
+                similar_users = find_similar_users(user_id, self.user_sim_matrix)
+                return predict_single_product_utility_uu(self.user_utility_matrix,
+                                                         similar_users, product_id, self.product_dict)
             lsh_algo = self.lsh
             similarity_dic = lsh_algo.build_similar_dict(user_id)
             sum_weights = 0
@@ -175,6 +179,9 @@ class SystemModule:
             else:
                 return sum_weights / sum_similarity
         elif algo == "item":
+            if not lsh:
+                return predict_single_product_utility_ii(self.product_utility_matrix, self.product_sim_matrix,
+                                                         user_id, self.user_dict, product_id)
             lsh_algo = self.lsh
             similarity_dic = lsh_algo.build_similar_dict(product_id)
             sum_weights = 0
@@ -217,9 +224,10 @@ if __name__ == '__main__':
     #                 hash_size=2, num_tables=3)
     # m.find_recommended_products("A3QY3THQ42WSCQ", "content", lsh=True)
 
-    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "item", reduce=False,
+    m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False,
                     hash_size=8, num_tables=2, eco=True)
-    m.find_recommended_products("A2HOI48JK8838M", "item", lsh=False)
+    print(m.predict_utility("A2HOI48JK8838M", "B00004U9V2", "user", lsh=False))
+    # m.find_recommended_products("A2HOI48JK8838M", "item", lsh=False)
 
     # m.set_up_matrix("resource/cleaned_data/AMAZON_FASHION_stock.csv", "item", hash_size=2, num_tables=3)
     # m.find_recommended_products("A3HX4X3TIABWOV", "item", lsh=True)
@@ -236,7 +244,6 @@ if __name__ == '__main__':
 
     # m.set_up_matrix("resource\cleaned_data\Luxury_Beauty_stock.csv", "content", reduce=False, hash_size=2, num_tables=3)
     # m.find_recommended_products("A3VXLOGI23ZHHX", "content", lsh=True)
-
 
     # m.set_up_matrix("resource/cleaned_data/Toys_&_Games_stock.csv", "user", reduce=True, hash_size=12, num_tables=2)
     # m.find_recommended_products("A3ILHRAH8ZRCBD", "user", lsh=True)
