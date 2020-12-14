@@ -8,19 +8,20 @@ from src.modules import *
 
 
 if __name__ == '__main__':
-    m = SystemModule()
-    
-  beauty = pd.read_csv('Luxury_Beauty_stock.csv')
-  fashion = pd.read_csv('AMAZON_FASHION_stock.csv')
-  toy = pd.read_csv("Toys_&_Games_stock.csv")
+  m = SystemModule()
 
-  beauty_item = pd.read_csv('Beauty_Item_P.csv')
-  beauty_user = pd.read_csv('Beauty_User_P.csv')
-  beauty_content = pd.read_csv('Beauty_Content_P.csv')
+  # set up the original testing data
+  beauty = pd.read_csv('resource/cleaned_data/Luxury_Beauty_stock.csv')
+  toy = pd.read_csv('resource/cleaned_data/Toys_&_Games_stock.csv')
+  fashion = pd.read_csv('resource/cleaned_data/AMAZON_FASHION_stock.csv')
 
-  fashion_item = pd.read_csv('Fashion_Item_P.csv')
-  fashion_user = pd.read_csv('Fashion_User_P.csv')
-  fashion_content = pd.read_csv('Fashion_Content_P.csv')
+  beauty_item = pd.read_csv('resource/performance_test_data/Beauty_Item_P.csv')
+  beauty_user = pd.read_csv('resource/performance_test_data/Beauty_User_P.csv')
+  beauty_content = pd.read_csv('resource/performance_test_data/Beauty_Content_P.csv')
+
+  fashion_item = pd.read_csv('resource/performance_test_data/Fashion_Item_P.csv')
+  fashion_user = pd.read_csv('resource/performance_test_data/Fashion_User_P.csv')
+  fashion_content = pd.read_csv('resource/performance_test_data/Fashion_Content_P.csv')
   
   def Visual(raw, performance):
     
