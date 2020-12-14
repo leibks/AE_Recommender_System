@@ -49,6 +49,6 @@ def join_process(df):
     df['Date'] = pd.to_datetime(df['reviewTime']).dt.strftime('%Y/%m/%d')
     return pd.merge(df, res, on='Date', how='left')
 
+
 # A list of 4 joined data frames
 joined = [join_process(df) for df in [fashion, electronics, beauty, toy]]
-
