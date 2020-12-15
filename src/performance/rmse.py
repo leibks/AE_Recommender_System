@@ -20,7 +20,7 @@ INPUT_PATHS = [
     "resource/cleaned_data/Toys_&_Games_stock.csv",
     "resource/cleaned_data/Toys_&_Games_stock.csv"
 ]
-SELECT_TEST = 9  # select different tests you want to run here, indexes are below
+SELECT_TEST = 0  # select different tests you want to run here, indexes are below
 OUTPUT_PATHS = [
     "resource/performance_test_data/Performance_Beauty_Item.csv",  # 0
     "resource/performance_test_data/Performance_Beauty_User.csv",  # 1
@@ -84,28 +84,33 @@ def run_file(test, algo, file_path, model, do_reduce=False):
     reviewer = [i for i in test.reviewerID]
     product = [i for i in test.asin]
     pair = list(zip(reviewer, product))
-
+    valid_count = 0
     for i, v in tqdm(enumerate(pair), desc="Performance Test Loading ...."):
         if do_reduce:
             if v[1] in model.product_dict:
                 p = model.predict_utility(v[0], v[1], algo)
                 # print(p)
                 predict.append(p)
+                valid_count += 1
+            else:
+                predict.append(-1)
         else:
             p = model.predict_utility(v[0], v[1], algo)
             # print(p)
             predict.append(p)
+            valid_count += 1
 
     test["Predict"] = predict
+    test = test[test["Predict"] != -1]
     # save the performance result
     test.to_csv(file_path, index=False)
 
-    test["Res"] = (test["Predict"] != 0.0).astype(int)
+    # test["Res"] = (test["Predict"] != 0.0).astype(int)
     # test_non_zero = test[test["Predict"] != 0.0]
     # test["Predict"].loc[test["Predict"] == 0.0] = test_non_zero["Predict"].mean()
     return (
         mean_squared_error(test["overall"], test["Predict"], squared=False),
-        sum(test["Res"]) / len(test),
+        sum(test["Predict"]) / valid_count
     )
 
 
