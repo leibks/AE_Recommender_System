@@ -219,6 +219,9 @@ class RMSystemModel:
         print(f"Finish set up matrix for {algo} algorithm")
 
     def find_recommended_products(self, user_id, algo, do_lsh):
+        if do_lsh:
+            print("using LSH for optimization")
+        print(f"run {algo} algorithm")
         recommended_products = []
         if algo == "user":
             if do_lsh:
@@ -280,12 +283,12 @@ class RMSystemModel:
         return res_utility
 
 
-if __name__ == '__main__':
-    # simple test case
-    m = RMSystemModel()
-    m.set_up_matrix("resource/cleaned_data/amazon_fashion_stock.csv", "item", reduce=False,
-                    hash_size=3, num_tables=2, eco=True, retrained=False)
-    res = m.find_recommended_products("A3HX4X3TIABWOV", "item", do_lsh=True)
+# if __name__ == '__main__':
+#     # simple test case
+#     m = RMSystemModel()
+#     m.set_up_matrix("resource/cleaned_data/amazon_fashion_stock.csv", "item", reduce=False,
+#                     hash_size=3, num_tables=2, eco=True, retrained=False)
+#     res = m.find_recommended_products("A3HX4X3TIABWOV", "item", do_lsh=True)
 
     # m.set_up_matrix("resource/cleaned_data/Luxury_Beauty_stock.csv", "user", reduce=False,
     #                 hash_size=8, num_tables=2, eco=True)
