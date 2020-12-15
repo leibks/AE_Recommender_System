@@ -74,9 +74,13 @@ class RMSystemModel:
         reduce = "_reduced" if reduce else ""
         eco = "_eco" if eco else ""
         save_file_name = f"{input_name}_{matrix}_{algo}-algo{reduce}{eco}.pkl"
-        # print(save_file_name)
         with open(f"src/trained_matrix/{save_file_name}", 'rb') as handle:
             fetch_matrix = pickle.load(handle)
+        if matrix == "rated_products":
+            for key in fetch_matrix:
+                self.rated_products[key] = [i for i in fetch_matrix[key].split(",")]
+            return
+
         for i, key in enumerate(fetch_matrix):
             fetch_matrix[key] = [float(k) for k in fetch_matrix[key].split(",")]
 
@@ -127,9 +131,17 @@ class RMSystemModel:
         with open(f"src/trained_matrix/{save_file_name}", "wb") as handle:
             pickle.dump(saved_sim_matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+        # save the rated products
+        save_file_name = f"{input_name}_rated_products_{algo}-algo{reduce}{eco}.pkl"
+        save_rated_products = {}
+        for key in self.rated_products:
+            save_rated_products[key] = ",".join(self.rated_products[key])
+        with open(f"src/trained_matrix/{save_file_name}", "wb") as handle:
+            pickle.dump(save_rated_products, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
     # reduce: determine if reduce the size of the matrix with
     # help of content-based algorithms for collaborative filtering algorithm
-    def set_up_matrix(self, file_path, algo, reduce=False, eco=True, hash_size=5, num_tables=3, retrained=True):
+    def set_up_matrix(self, file_path, algo, reduce=False, eco=True, hash_size=5, num_tables=3, retrained=False):
         df = pd.read_csv(file_path)
         high_value = 0
         low_value = 0
@@ -163,6 +175,7 @@ class RMSystemModel:
                 print("fetch the trained matrix")
                 self.fetch_trained_matrix(file_path, algo, reduce, eco, "utility_matrix")
                 self.fetch_trained_matrix(file_path, algo, reduce, eco, "sim_matrix")
+                self.fetch_trained_matrix(file_path, algo, reduce, eco, "rated_products")
             else:
                 build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, self.rated_products,
                                           high_value, low_value, eco)
@@ -185,6 +198,7 @@ class RMSystemModel:
                 print("fetch the trained matrix")
                 self.fetch_trained_matrix(file_path, algo, reduce, eco, "utility_matrix")
                 self.fetch_trained_matrix(file_path, algo, reduce, eco, "sim_matrix")
+                self.fetch_trained_matrix(file_path, algo, reduce, eco, "rated_products")
             else:
                 build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, self.rated_products,
                                           high_value, low_value, eco)
