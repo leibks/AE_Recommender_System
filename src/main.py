@@ -25,7 +25,7 @@ FILE_NAMES = [
 HASH_SIZES = [8, 3, 12]
 
 if __name__ == '__main__':
-    test_index = 0  # change here
+    test_index = 0  # change data set here
     file_name = FILE_NAMES[test_index]
     user_id = args.USER  # A2HOI48JK8838M
     algo = args.ALGO
