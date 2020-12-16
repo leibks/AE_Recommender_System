@@ -35,7 +35,7 @@ if __name__ == '__main__':
     retrain = True if args.RETRAIN == "True" else False
     print([user_id, algo, eco, do_lsh, reduce])
     m = RMSystemModel()
-    m.set_up_matrix(file_name, algo=algo, reduce=reduce, hash_size=HASH_SIZES[test_index], num_tables=2, eco=eco, retrained=retrain)
-    # print(m.predict_utility("A2HOI48JK8838M", "B00004U9V2", algo, lsh=False))
+    m.set_up_matrix(file_name, algo=algo, reduce=reduce, hash_size=HASH_SIZES[test_index],
+                    num_tables=2, eco=eco, retrained=retrain)
     res = m.find_recommended_products(user_id, algo=algo, do_lsh=do_lsh)
 

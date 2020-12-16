@@ -60,18 +60,22 @@ class RMSystemModel:
         self.rated_products = {}
 
     @staticmethod
-    def has_trained_matrix(file_path, algo, eco):
+    def has_trained_matrix(file_path, algo, eco, reduce):
         input_name = file_path.split("/")[-1]
         eco = "_eco" if eco else ""
-        save_file_name1 = f"{input_name}_utility_matrix_{algo}-algo{eco}.pkl"
-        save_file_name2 = f"{input_name}_sim_matrix_{algo}-algo{eco}.pkl"
+        reduce = "_reduce" if reduce else ""
+        save_file_name1 = f"{input_name}_utility_matrix_{algo}-algo{eco}{reduce}.pkl"
+        save_file_name2 = f"{input_name}_sim_matrix_{algo}-algo{eco}{reduce}.pkl"
+        save_file_name3 = f"{input_name}_rated_products_{algo}-algo{eco}{reduce}.pkl"
         return os.path.exists(f"src/trained_matrix/{save_file_name1}") and \
-               os.path.exists(f"src/trained_matrix/{save_file_name2}")
+               os.path.exists(f"src/trained_matrix/{save_file_name2}") and \
+               os.path.exists(f"src/trained_matrix/{save_file_name3}")
 
-    def fetch_trained_matrix(self, file_path, algo, eco, matrix):
+    def fetch_trained_matrix(self, file_path, algo, eco, reduce, matrix):
         input_name = file_path.split("/")[-1]
         eco = "_eco" if eco else ""
-        save_file_name = f"{input_name}_{matrix}_{algo}-algo{eco}.pkl"
+        reduce = "_reduce" if reduce else ""
+        save_file_name = f"{input_name}_{matrix}_{algo}-algo{eco}{reduce}.pkl"
         with open(f"src/trained_matrix/{save_file_name}", 'rb') as handle:
             fetch_matrix = pickle.load(handle)
         if matrix == "rated_products":
@@ -83,7 +87,7 @@ class RMSystemModel:
             fetch_matrix[key] = [float(k) for k in fetch_matrix[key].split(",")]
 
         if algo == "user":
-            for user_id in self.user_dict:
+            for user_id in self.user_ids:
                 for p_index in range(len(self.product_ids)):
                     if matrix == "utility_matrix":
                         self.user_utility_matrix[user_id][p_index] = fetch_matrix[user_id][p_index]
@@ -97,10 +101,11 @@ class RMSystemModel:
                     elif matrix == "sim_matrix":
                         self.product_sim_matrix[product_id][u_index] = fetch_matrix[user_id][p_index]
 
-    def save_trained_matrix(self, file_path, algo, eco):
+    def save_trained_matrix(self, file_path, algo, eco, reduce):
         input_name = file_path.split("/")[-1]
         eco = "_eco" if eco else ""
-        save_file_name = f"{input_name}_utility_matrix_{algo}-algo{eco}.pkl"
+        reduce = "_reduce" if reduce else ""
+        save_file_name = f"{input_name}_utility_matrix_{algo}-algo{eco}{reduce}.pkl"
         saved_utility_matrix = {}
         if algo == "user":
             for i, key in enumerate(self.user_utility_matrix):
@@ -114,7 +119,7 @@ class RMSystemModel:
         with open(f"src/trained_matrix/{save_file_name}", "wb") as handle:
             pickle.dump(saved_utility_matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-        save_file_name = f"{input_name}_sim_matrix_{algo}-algo{eco}.pkl"
+        save_file_name = f"{input_name}_sim_matrix_{algo}-algo{eco}{reduce}.pkl"
         saved_sim_matrix = {}
         if algo == "user":
             for i, key in enumerate(self.user_sim_matrix):
@@ -129,12 +134,33 @@ class RMSystemModel:
             pickle.dump(saved_sim_matrix, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
         # save the rated products
-        save_file_name = f"{input_name}_rated_products_{algo}-algo{eco}.pkl"
+        save_file_name = f"{input_name}_rated_products_{algo}-algo{eco}{reduce}.pkl"
         save_rated_products = {}
         for key in self.rated_products:
             save_rated_products[key] = ",".join(self.rated_products[key])
         with open(f"src/trained_matrix/{save_file_name}", "wb") as handle:
             pickle.dump(save_rated_products, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+    def fetch_user_product_lists(self, file_path, algo, eco, reduce):
+        input_name = file_path.split("/")[-1]
+        eco = "_eco" if eco else ""
+        reduce = "_reduce" if reduce else ""
+        save_file_name = f"{input_name}_user_product_lists_{algo}-algo{eco}{reduce}.pkl"
+        with open(f"src/trained_matrix/{save_file_name}", 'rb') as handle:
+            fetch_matrix = pickle.load(handle)
+        self.user_ids = [i for i in fetch_matrix["user_list"].split(",")]
+        self.product_ids = [i for i in fetch_matrix["product_list"].split(",")]
+
+    def save_user_product_lists(self, file_path, algo, eco, reduce):
+        input_name = file_path.split("/")[-1]
+        eco = "_eco" if eco else ""
+        reduce = "_reduce" if reduce else ""
+        save_file_name = f"{input_name}_user_product_lists_{algo}-algo{eco}{reduce}.pkl"
+        save_lists = dict()
+        save_lists["user_list"] = ",".join(self.user_ids)
+        save_lists["product_list"] = ",".join(self.product_ids)
+        with open(f"src/trained_matrix/{save_file_name}", "wb") as handle:
+            pickle.dump(save_lists, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
     # reduce: determine if reduce the size of the matrix with
     # help of content-based algorithms for collaborative filtering algorithm
@@ -158,24 +184,28 @@ class RMSystemModel:
         print(f"number of users: {len(self.user_ids)}")
         print(f"number of products: {len(self.product_ids)}")
         if reduce:
-            retrained = False
             print("execute reduce products")
             self.product_ids = reduce_matrix(self.review_text_dict, self.content_feature_size, hash_size, num_tables)
             print(f"After reduce, number of products: {len(self.product_ids)}")
         dict_res = build_dictionary(self.user_ids, self.product_ids)
         self.user_dict = dict_res[0]
         self.product_dict = dict_res[1]
-
         if algo == "user":
-            self.user_utility_matrix = build_user_matrix(self.user_ids, self.product_ids)
-            self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
             print("===================================")
-            if not retrained and self.has_trained_matrix(file_path, algo, eco):
+            if not retrained and self.has_trained_matrix(file_path, algo, eco, reduce,):
                 print("fetch the trained matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "utility_matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "sim_matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "rated_products")
+                self.fetch_user_product_lists(file_path, algo, eco, reduce)
+                dict_res_s = build_dictionary(self.user_ids, self.product_ids)
+                self.user_dict = dict_res_s[0]
+                self.product_dict = dict_res_s[1]
+                self.user_utility_matrix = build_user_matrix(self.user_ids, self.product_ids)
+                self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "utility_matrix")
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "sim_matrix")
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "rated_products")
             else:
+                self.user_utility_matrix = build_user_matrix(self.user_ids, self.product_ids)
+                self.user_sim_matrix = build_user_matrix(self.user_ids, self.product_ids)
                 build_user_utility_matrix(self.user_utility_matrix, df, self.product_dict, self.rated_products,
                                           high_value, low_value, eco)
                 print("rate of original utility: ")
@@ -187,20 +217,27 @@ class RMSystemModel:
                 print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
                 build_user_similarity_matrix(self.user_sim_matrix, self.user_utility_matrix, self.rated_products,
                                              self.product_dict)
-                self.save_trained_matrix(file_path, algo, eco)
+                self.save_user_product_lists(file_path, algo, eco, reduce)
+                self.save_trained_matrix(file_path, algo, eco, reduce)
             # print(self.user_utility_matrix)
             print("===================================")
             self.lsh = LSH(self.user_sim_matrix, len(self.product_ids), hash_size=hash_size, num_tables=num_tables)
         elif algo == "item":
-            self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
-            self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
             print("===================================")
-            if not retrained and self.has_trained_matrix(file_path, algo, eco):
+            if not retrained and self.has_trained_matrix(file_path, algo, eco, reduce):
                 print("fetch the trained matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "utility_matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "sim_matrix")
-                self.fetch_trained_matrix(file_path, algo, eco, "rated_products")
+                self.fetch_user_product_lists(file_path, algo, eco, reduce)
+                dict_res_s = build_dictionary(self.user_ids, self.product_ids)
+                self.user_dict = dict_res_s[0]
+                self.product_dict = dict_res_s[1]
+                self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
+                self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "utility_matrix")
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "sim_matrix")
+                self.fetch_trained_matrix(file_path, algo, eco, reduce, "rated_products")
             else:
+                self.product_utility_matrix = build_item_matrix(self.user_ids, self.product_ids)
+                self.product_sim_matrix = build_item_matrix(self.user_ids, self.product_ids)
                 build_item_utility_matrix(self.product_utility_matrix, df, self.user_dict, self.rated_products,
                                           high_value, low_value, eco)
                 print("rate of original utility: ")
@@ -212,7 +249,8 @@ class RMSystemModel:
                 print(calculate_filled_utilities(self.rated_products, len(self.product_ids)))
                 build_item_similarity_matrix(self.product_sim_matrix, self.product_utility_matrix,
                                              self.user_ids, self.user_dict)
-                self.save_trained_matrix(file_path, algo, eco)
+                self.save_user_product_lists(file_path, algo, eco, reduce)
+                self.save_trained_matrix(file_path, algo, eco, reduce)
             # print(self.product_utility_matrix)
             print("===================================")
             self.lsh = LSH(self.product_sim_matrix, len(self.user_ids), hash_size=hash_size, num_tables=num_tables)

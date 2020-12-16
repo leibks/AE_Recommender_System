@@ -20,7 +20,7 @@ INPUT_PATHS = [
     "resource/cleaned_data/Toys_&_Games_stock.csv",
     "resource/cleaned_data/Toys_&_Games_stock.csv"
 ]
-SELECT_TEST = 0  # select different tests you want to run here, indexes are below
+SELECT_TEST = 3  # select different tests you want to run here, indexes are below
 OUTPUT_PATHS = [
     "resource/performance_test_data/Performance_Beauty_Item.csv",  # 0
     "resource/performance_test_data/Performance_Beauty_User.csv",  # 1
@@ -61,18 +61,20 @@ HASH_SIZE = [8, 8, 3, 3, 12, 12, 8, 8, 3, 3, 12, 12]
 def res_export(test_index):
     print("Start Performance Tests: ")
     reduce = False
+    eco = True
+    if test_index > 5:
+        eco = False
     if INPUT_PATHS[test_index] == "resource/cleaned_data/Toys_&_Games_stock.csv":
         print("reduce the matrix due the huge size")
         reduce = True
 
     model = RMSystemModel()
     model.set_up_matrix(INPUT_PATHS[test_index], ALGO[test_index], reduce=reduce,
-                        hash_size=HASH_SIZE[test_index], num_tables=2, eco=True)
-    r, n = run_file(tests[test_index], ALGO[test_index], OUTPUT_PATHS[test_index], model, do_reduce=reduce)
+                        hash_size=HASH_SIZE[test_index], num_tables=2, eco=eco)
+    r = run_file(tests[test_index], ALGO[test_index], OUTPUT_PATHS[test_index], model, do_reduce=reduce)
     result = pd.DataFrame()
     result["Name"] = [TEST_TYPES[test_index]]
     result["RMSE"] = [r]
-    result["None Zero Rate"] = [n]
     result.to_csv(STORE_RMSE_PATHS[test_index], index=False)
 
 
@@ -109,8 +111,7 @@ def run_file(test, algo, file_path, model, do_reduce=False):
     # test_non_zero = test[test["Predict"] != 0.0]
     # test["Predict"].loc[test["Predict"] == 0.0] = test_non_zero["Predict"].mean()
     return (
-        mean_squared_error(test["overall"], test["Predict"], squared=False),
-        sum(test["Predict"]) / valid_count
+        mean_squared_error(test["overall"], test["Predict"], squared=False)
     )
 
 
